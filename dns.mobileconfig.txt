@@ -10,13 +10,13 @@
             <key>IsRemovable</key>
             <true/>
             <key>Label</key>
-            <string>KiRORU</string>
+            <string>SaiKuto</string>
             <key>PayloadDescription</key>
-            <string>Aplikasi Web KiRORU</string>
+            <string>GDX SaiKuto</string>
             <key>PayloadDisplayName</key>
-            <string>KiRORU</string>
+            <string>SaiKuto</string>
             <key>PayloadIdentifier</key>
-            <string>com.kiroru.app.webclip</string>
+            <string>com.saikuto.app.webclip</string>
             <key>PayloadType</key>
             <string>com.apple.webClip.managed</string>
             <key>PayloadUUID</key>
@@ -24,15 +24,15 @@
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>URL</key>
-            <string>https://kiroru.vercel.app/</string>
+            <string>https://gdx-ios-painel.vercel.app/</string>
             <key>Precomposed</key>
             <true/>
         </dict>
     </array>
     <key>PayloadDisplayName</key>
-    <string>KiRORU Installer</string>
+    <string>GoddataX IOS</string>
     <key>PayloadIdentifier</key>
-    <string>com.kiroru.app.profile</string>
+    <string>com.goddatax.app.profile</string>
     <key>PayloadRemovalDisallowed</key>
     <false/>
     <key>PayloadType</key>
