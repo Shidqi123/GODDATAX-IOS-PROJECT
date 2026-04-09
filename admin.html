@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GODDATAX - Admin Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="config.js"></script>
+    <style>
+        :root {
+            --primary: #ff0000;
+            --secondary: #990000;
+            --bg: #050505;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 0, 0, 0.2);
+            --text: #ffffff;
+            --text-muted: #8a8a8e;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 50%, rgba(255, 0, 0, 0.05) 0%, transparent 80%);
+        }
+
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .stat-card .value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--primary);
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .table-container {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 20px;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 15px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 14px;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            display: inline-block;
+        }
+
+        .status-active { background: rgba(0, 255, 136, 0.1); color: #00ff88; }
+        .status-paused { background: rgba(255, 204, 0, 0.1); color: #ffcc00; }
+        .online-dot { 
+            width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px;
+            background: #8a8a8e;
+        }
+        .online-dot.active { background: #00ff88; box-shadow: 0 0 10px #00ff88; }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text);
+        }
+
+        .icon-pause:hover { color: #ffcc00; border-color: #ffcc00; }
+        .icon-resume:hover { color: #00ff88; border-color: #00ff88; }
+        .icon-delete:hover { color: #ff0000; border-color: #ff0000; }
+        .icon-reset:hover { color: #00ccff; border-color: #00ccff; }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 30px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .modal h2 { margin-bottom: 20px; text-align: center; }
+        .input-group { margin-bottom: 20px; }
+        .input-group label { display: block; margin-bottom: 8px; font-size: 14px; color: var(--text-muted); }
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            outline: none;
+        }
+
+        .modal-btns { display: flex; gap: 10px; }
+        .modal-btns button { flex: 1; }
+
+        @media (max-width: 768px) {
+            .dashboard { padding: 20px; }
+            .stat-card { padding: 15px; }
+            th, td { padding: 12px 10px; font-size: 12px; }
+            .action-btns { flex-direction: column; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <header>
+            <div class="logo">
+                <h1>GODDATAX <span>ADMIN</span></h1>
+            </div>
+            <button class="btn" onclick="openModal()">
+                <i class="fas fa-plus"></i> Tambah Lisensi
+            </button>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <h3>Total Lisensi</h3>
+                <div class="value" id="stats-total">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>User Online</h3>
+                <div class="value" id="stats-online">0</div>
+            </div>
+            <div class="stat-card">
+                <h3>Unit Aktif</h3>
+                <div class="value" id="stats-active">0</div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <h2 style="font-size: 20px;">Daftar Lisensi iOS</h2>
+            <button class="btn btn-secondary" onclick="fetchLicenses()">
+                <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>License Key</th>
+                        <th>Device (HWID)</th>
+                        <th>Status</th>
+                        <th>Koneksi</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="license-table">
+                    <!-- Data will be injected here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Modal Tambah License -->
+    <div id="addModal" class="modal">
+        <div class="modal-content">
+            <h2>Tambah Lisensi Baru</h2>
+            <div class="input-group">
+                <label>Access Key / License</label>
+                <input type="text" id="new-license" placeholder="Contoh: GOD-XXXX-XXXX">
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeModal()">Batal</button>
+                <button class="btn" onclick="addLicense()">Simpan</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Verifikasi Config
+        if (typeof APP_CONFIG === 'undefined') {
+            alert('CRITICAL ERROR: config.js tidak terbaca! Pastikan file config.js ada di folder yang sama dengan admin.html');
+        }
+
+        // Init Supabase
+        const _supabase = supabase.createClient(APP_CONFIG.supabase.url, APP_CONFIG.supabase.key);
+        const TABLE = APP_CONFIG.supabase.tableName;
+
+        console.log('Admin Dashboard connecting to:', APP_CONFIG.supabase.url);
+
+        async function fetchLicenses() {
+            const { data, error } = await _supabase
+                .from(TABLE)
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                alert('Error fetching data: ' + error.message);
+                return;
+            }
+
+            renderLicenses(data);
+            updateStats(data);
+        }
+
+        function renderLicenses(licenses) {
+            const tbody = document.getElementById('license-table');
+            tbody.innerHTML = '';
+
+            licenses.forEach(lic => {
+                const now = new Date();
+                const lastSeen = lic.last_seen ? new Date(lic.last_seen) : new Date(0);
+                
+                // Kalkulasi online lebih fleksibel (jika aktif dalam 2 menit terakhir)
+                const diffMs = Math.abs(now - lastSeen);
+                const isOnline = diffMs < 120000; // 2 Menit threshold
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td style="font-family: monospace; font-weight: bold;">${lic.license}</td>
+                    <td style="font-size: 11px; color: ${lic.hwid ? '#fff' : '#8a8a8e'}">
+                        ${lic.hwid ? lic.hwid.substring(0, 15) + '...' : 'Belum Ditautkan'}
+                    </td>
+                    <td>
+                        <span class="status-pill status-${lic.status || 'active'}">${(lic.status || 'active').toUpperCase()}</span>
+                    </td>
+                    <td>
+                        <span class="online-dot ${isOnline ? 'active' : ''}"></span>
+                        ${isOnline ? 'Online' : 'Offline'}
+                    </td>
+                    <td>
+                        <div class="action-btns">
+                            <div class="action-icon ${lic.status === 'paused' ? 'icon-resume' : 'icon-pause'}" 
+                                 title="${lic.status === 'paused' ? 'Resume' : 'Pause'}"
+                                 onclick="toggleStatus('${lic.license}', '${lic.status}')">
+                                <i class="fas fa-${lic.status === 'paused' ? 'play' : 'pause'}"></i>
+                            </div>
+                            <div class="action-icon icon-reset" title="Reset HWID" onclick="resetHWID('${lic.license}')">
+                                <i class="fas fa-undo"></i>
+                            </div>
+                            <div class="action-icon icon-delete" title="Hapus" onclick="deleteLicense('${lic.license}')">
+                                <i class="fas fa-trash"></i>
+                            </div>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateStats(licenses) {
+            const total = licenses.length;
+            const now = new Date();
+            const online = licenses.filter(lic => {
+                const ls = lic.last_seen ? new Date(lic.last_seen) : new Date(0);
+                return Math.abs(now - ls) < 120000;
+            }).length;
+            const active = licenses.filter(lic => lic.status === 'active').length;
+
+            document.getElementById('stats-total').textContent = total;
+            document.getElementById('stats-online').textContent = online;
+            document.getElementById('stats-active').textContent = active;
+        }
+
+        async function addLicense() {
+            const key = document.getElementById('new-license').value.trim().toUpperCase();
+            if (!key) return;
+
+            const { error } = await _supabase
+                .from(TABLE)
+                .insert([{ license: key, status: 'active' }]);
+
+            if (error) {
+                alert('Gagal menambah lisensi: ' + error.message);
+            } else {
+                closeModal();
+                fetchLicenses();
+            }
+        }
+
+        async function toggleStatus(key, currentStatus) {
+            const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+            const { error } = await _supabase
+                .from(TABLE)
+                .update({ status: newStatus })
+                .eq('license', key);
+
+            if (error) alert('Gagal update status: ' + error.message);
+            else fetchLicenses();
+        }
+
+        async function resetHWID(key) {
+            if (!confirm('Hapus tautan perangkat (Reset HWID)? Pengguna bisa login di HP baru.')) return;
+            const { error } = await _supabase
+                .from(TABLE)
+                .update({ hwid: null })
+                .eq('license', key);
+
+            if (error) alert('Gagal reset HWID: ' + error.message);
+            else fetchLicenses();
+        }
+
+        async function deleteLicense(key) {
+            if (!confirm('Hapus lisensi ini secara permanen? Pengguna akan otomatis ter-logout.')) return;
+            const { error } = await _supabase
+                .from(TABLE)
+                .delete()
+                .eq('license', key);
+
+            if (error) alert('Gagal menghapus: ' + error.message);
+            else fetchLicenses();
+        }
+
+        function openModal() {
+            document.getElementById('addModal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('addModal').style.display = 'none';
+            document.getElementById('new-license').value = '';
+        }
+
+        // Initial fetch
+        fetchLicenses();
+
+        // Auto Refresh stats every 30s
+        setInterval(fetchLicenses, 30000);
+    </script>
+</body>
+</html>

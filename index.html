@@ -1,0 +1,579 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#ff7a00">
+  
+  <!-- PWA Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GODDATAX">
+  
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json" crossorigin="use-credentials">
+  
+  <!-- Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  
+  <title>GODDATAX</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+  <!-- Dynamic Status Bar (iOS style) -->
+  <div id="dynamicStatus" class="dynamic-island">
+    <div class="island-content">
+      <div class="island-icon"><i class="fas fa-shield-alt"></i></div>
+      <div class="island-text">GODDATAX SECURED</div>
+    </div>
+  </div>
+
+  <!-- Screen 0: Login Screen -->
+  <div id="loginScreen" class="screen active">
+    <div class="container">
+      <div class="animated-bg">
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+      </div>
+      
+      <div class="login-content">
+        <!-- Login Header -->
+        <div class="login-header">
+          <div class="login-logo">
+          <div class="login-icon" style="background: none; box-shadow: none; border-radius: 0; width: 150px; height: 150px;">
+            <img src="GODDATAX-removebg-preview.png" alt="GODDATAX Logo" style="width: 100%; height: 100%; object-fit: contain;">
+          </div>
+            <h1 class="login-title">GODDATAX</h1>
+            <p class="login-subtitle">IOS 14.0 - 26.1</p>
+          </div>
+        </div>
+        
+        <!-- Login Form -->
+        <div class="login-form">
+          <div class="input-group">
+            <div class="input-icon">
+              <i class="fas fa-key"></i>
+            </div>
+            <input type="password" id="loginKey" class="login-input" placeholder="Enter Access Key" autocomplete="off">
+            <div class="input-status" id="keyStatus">
+              <i class="fas fa-lock"></i>
+            </div>
+          </div>
+          
+          <div class="login-info">
+            <p><i class="fas fa-info-circle"></i> Contact admin for access key</p>
+          </div>
+          
+          <button class="login-btn" onclick="checkLogin()">
+            <div class="btn-content">
+              <span class="btn-text">ENTER</span>
+              <div class="btn-arrow">
+                <i class="fas fa-arrow-right"></i>
+              </div>
+            </div>
+            <div class="btn-pulse"></div>
+          </button>
+          
+          <div class="login-footer">
+            <p class="version">Version 1.0 • Goddata Iphone • iOS 14.0-26.1</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>  <!-- ===== SWIPEABLE PAGE CONTAINER ===== -->
+  <!-- navbar tabs: 0=Home, 1=Feature, 2=Status, 3=Credits -->
+  <div id="swipeContainer" class="swipe-container" style="display:none;">
+    <div class="swipe-track" id="swipeTrack">
+
+    <!-- Page 0: Home -->
+    <div class="swipe-page" id="swipePage-mainScreen">
+      <div class="swipe-inner">
+        <div class="header-glitch">
+          <h1 class="title glitch" data-text="GODDATAX">GODDATAX</h1>
+          <div class="version-info">
+            <p class="subtitle">IOS 14.0 - 26.1</p>
+            <p class="author">by Kutoo • Lifetime Access</p>
+          </div>
+        </div>
+        <div class="menu-cards">
+
+          <div class="card" onclick="showScreen('settingsScreen')">
+            <div class="card-icon"><i class="fas fa-cog"></i></div>
+            <div class="card-content"><h3>Settings</h3><p>System configuration</p></div>
+            <div class="card-arrow"><i class="fas fa-chevron-right"></i></div>
+          </div>
+          <div class="card" onclick="showNotification('SpringBoard restarted')">
+            <div class="card-icon"><i class="fas fa-redo"></i></div>
+            <div class="card-content"><h3>Restart SpringBoard</h3><p>Reload interface</p></div>
+          </div>
+          <div class="card" onclick="navTo(3)">
+            <div class="card-icon"><i class="fas fa-star"></i></div>
+            <div class="card-content"><h3>Credits</h3><p>Developer info</p></div>
+          </div>
+          <div class="card" onclick="logoutUser()">
+            <div class="card-icon" style="color:#ff0000;"><i class="fas fa-sign-out-alt"></i></div>
+            <div class="card-content"><h3>Logout</h3><p>Exit application</p></div>
+          </div>
+        </div>
+
+
+
+
+      </div>
+    </div>
+
+    <!-- Page 1: Free Fire Features -->
+    <div class="swipe-page" id="swipePage-freefireScreen">
+      <div class="swipe-inner">
+        <div class="swipe-page-header">
+          <h1 class="page-title-bold">Free Fire Features</h1>
+        </div>
+        <div class="settings-content-new">
+          <div class="group-card">
+            <div class="group-header"><i class="fas fa-gamepad"></i> FREE FIRE FEATURES</div>
+            <div class="setting-row">
+              <div class="row-info"><h3>Aim Assist</h3><p>Automatic aiming assistance</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="aim"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="row-info"><h3>Anti-Ban Protection</h3><p>Prevent detection &amp; bans</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="antiban" checked><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="row-info"><h3>Headshot Optimization</h3><p>Improve headshot accuracy</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="headshot"><span class="slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="row-info"><h3>Recoil Control</h3><p>Reduce weapon recoil for accuracy</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="recoilcontrol"><span class="slider"></span></label>
+            </div>
+            <div class="info-box-brown">
+              <i class="fas fa-info-circle"></i>
+              <p>These features are optional. Saii will launch Free Fire regardless.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Page 2: Status -->
+    <div class="swipe-page" id="swipePage-statusScreen">
+      <div class="swipe-inner">
+        <div class="status-header-clean">
+          <div class="status-logo-sx" style="background: none; border: none; box-shadow: none; padding: 0;">
+            <img src="GODDATAX-removebg-preview.png" alt="GODDATAX" style="height: 50px; width: auto; object-fit: contain;">
+          </div>
+          <p class="status-by">By SaiKuto</p>
+        </div>
+        <div class="game-status-list">
+          <div class="game-horizontal-card" onclick="openLaunchSheet('ff')">
+            <div class="game-icon-square">
+              <img src="ff_logo.jpg" alt="FF">
+            </div>
+            <div class="game-name-info">
+              <h3>Free Fire</h3>
+              <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefireth</p>
+            </div>
+            <div class="game-status-indicator online"></div>
+          </div>
+          <div class="game-horizontal-card" onclick="openLaunchSheet('ffmax')">
+            <div class="game-icon-square">
+              <img src="ff_max_logo.jpg" alt="FF MAX">
+            </div>
+            <div class="game-name-info">
+              <h3>Free Fire MAX</h3>
+               <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefiremax</p>
+            </div>
+            <div class="game-status-indicator offline"></div>
+          </div>
+        </div>
+
+
+
+
+
+      </div>
+    </div>
+
+    <!-- Page 3: Profile -->
+    <div class="swipe-page" id="swipePage-profileScreen">
+      <div class="swipe-inner">
+        <div class="status-header-clean" style="margin-bottom: 20px;">
+          <div class="status-logo-sx" style="background: none; border: none; box-shadow: none; padding: 0;">
+            <img src="GODDATAX-removebg-preview.png" alt="GODDATAX" style="height: 50px; width: auto; object-fit: contain;">
+          </div>
+          <p class="status-by">By SaiKuto</p>
+        </div>
+
+        <div class="profile-card-new">
+          <div class="profile-info-row">
+            <div class="p-icon"><i class="fab fa-apple"></i></div>
+            <div class="p-text">
+              <span class="p-label">iOS Version</span>
+              <span class="p-value" id="userIosVersion">Detecting...</span>
+            </div>
+          </div>
+          <div class="profile-info-row">
+            <div class="p-icon"><i class="fas fa-key"></i></div>
+            <div class="p-text">
+              <span class="p-label">License Key</span>
+              <span class="p-value" id="profileLicenseKey">Loading...</span>
+            </div>
+          </div>
+          <div class="profile-info-row">
+            <div class="p-icon"><i class="fas fa-clock"></i></div>
+            <div class="p-text">
+              <span class="p-label">Expired Time</span>
+              <span class="p-value" id="licenseExpiry">Lifetime Access</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="social-links-area" style="margin-top: 25px;">
+           <p class="section-title-small" style="color: #8a8a8e; font-size: 11px; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 1px;">Join Community</p>
+           <div class="game-horizontal-card social-card" onclick="window.open('https://www.whatsapp.com/channel/0029VbAJmz311ulYUDzPcm0w', '_blank')">
+              <div class="game-icon-square" style="background: #25d366; display: flex; align-items: center; justify-content: center;">
+                 <i class="fab fa-whatsapp" style="font-size: 30px; color: white;"></i>
+              </div>
+              <div class="game-name-info">
+                 <h3>Saluran WhatsApp</h3>
+                 <p style="font-size: 11px; color: #8a8a8e;">Get latest updates</p>
+              </div>
+              <div class="card-arrow"><i class="fas fa-external-link-alt" style="font-size: 12px; opacity: 0.5;"></i></div>
+           </div>
+
+           <div class="game-horizontal-card social-card" style="margin-top: 12px;" onclick="window.open('https://discord.com/invite/92S2etJPw7', '_blank')">
+              <div class="game-icon-square" style="background: #5865f2; display: flex; align-items: center; justify-content: center;">
+                 <i class="fab fa-discord" style="font-size: 30px; color: white;"></i>
+              </div>
+              <div class="game-name-info">
+                 <h3>Server Discord</h3>
+                 <p style="font-size: 11px; color: #8a8a8e;">Community support</p>
+              </div>
+              <div class="card-arrow"><i class="fas fa-external-link-alt" style="font-size: 12px; opacity: 0.5;"></i></div>
+           </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+           <button class="rescan-btn-minimal" style="color: #ff3b30; border-color: rgba(255, 59, 48, 0.2);" onclick="logoutUser()">
+              <i class="fas fa-sign-out-alt"></i> LOGOUT SESSION
+           </button>
+        </div>
+      </div>
+    </div>
+
+    </div><!-- end swipe-track -->
+  </div><!-- end swipeContainer -->
+
+  <!-- ===== BOTTOM SHEET MODAL (Free Fire Launch) ===== -->
+  <div class="bottom-sheet-overlay" id="launchBottomSheet" style="display:none;" onclick="closeBottomSheet(event)">
+    <div class="bottom-sheet" id="bottomSheetContent" onclick="event.stopPropagation()">
+      <div class="sheet-indicator"></div>
+      
+      <div class="sheet-header">
+        <div class="sheet-icon"><img src="" id="sheetAppIcon" alt="App"></div>
+        <div class="sheet-title-area">
+          <h2 id="sheetAppName">Free Fire</h2>
+          <p id="sheetAppPackage">com.dts.freefireth</p>
+        </div>
+      </div>
+      
+      <div class="sheet-body">
+        <p class="sheet-subtitle">Select Performance Mode:</p>
+        
+        <div class="mode-options" style="margin-bottom:30px;">
+          <label class="mode-option">
+            <input type="radio" name="perfMode" value="balanced" checked>
+            <div class="mode-card">
+              <i class="fas fa-balance-scale"></i>
+              <span>Balanced Mode</span>
+            </div>
+          </label>
+          <label class="mode-option">
+            <input type="radio" name="perfMode" value="competitive">
+            <div class="mode-card">
+              <i class="fas fa-crosshairs"></i>
+              <span>Competitive Mode</span>
+            </div>
+          </label>
+        </div>
+        
+        <button class="sheet-launch-btn" onclick="executeLaunch()">
+          <i class="fas fa-rocket"></i> <span id="sheetBtnText">LOGIN FREE FIRE</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Screen (full screen, outside swiper) -->
+  <div id="settingsScreen" class="screen">
+    <div class="container" style="padding-bottom:100px;">
+      <div class="header-nav-new">
+        <div class="back-btn-orange" onclick="exitFullScreen()">
+          <i class="fas fa-arrow-left"></i>
+        </div>
+        <h1 class="page-title-bold">Settings</h1>
+      </div>
+      <div class="settings-content-new">
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-code"></i> SYSTEM EXPLOITS</div>
+          <div class="setting-row"><div class="row-info"><h3>Kernel Exploit</h3><p>Bypass kernel security</p></div><label class="toggle-switch"><input type="checkbox" id="kernel"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Tweak Injection</h3><p>Inject custom modifications</p></div><label class="toggle-switch"><input type="checkbox" id="tweak"><span class="slider"></span></label></div>
+        </div>
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-tachometer-alt"></i> GAMING OPTIMIZATION</div>
+          <div class="setting-row"><div class="row-info"><h3>Performance Mode</h3><p>Maximize CPU/GPU performance</p></div><label class="toggle-switch"><input type="checkbox" id="performance"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Reduce Ping</h3><p>Optimize network for gaming</p></div><label class="toggle-switch"><input type="checkbox" id="reduce_ping"><span class="slider"></span></label></div>
+        </div>
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-desktop"></i> GRAPHICS SETTINGS</div>
+          <div class="setting-row"><div class="row-info"><h3>High FPS Mode</h3><p>Enable 90/120 FPS support</p></div><label class="toggle-switch"><input type="checkbox" id="high_fps"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Reduce Bloom Effect</h3><p>Decrease visual distractions</p></div><label class="toggle-switch"><input type="checkbox" id="bloom"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Anti-Aliasing</h3><p>Improve graphics quality</p></div><label class="toggle-switch"><input type="checkbox" id="antialiasing"><span class="slider"></span></label></div>
+        </div>
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-hand-pointer"></i> CONTROLS OPTIMIZATION</div>
+          <div class="setting-row"><div class="row-info"><h3>Touch Response Boost</h3><p>Improve touchscreen sensitivity</p></div><label class="toggle-switch"><input type="checkbox" id="touch_boost"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Auto-Fire Optimization</h3><p>Optimize automatic firing</p></div><label class="toggle-switch"><input type="checkbox" id="auto_fire"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>3D Touch Sensitivity</h3><p>Adjust 3D Touch for shooting</p></div><label class="toggle-switch"><input type="checkbox" id="3d_touch"><span class="slider"></span></label></div>
+        </div>
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-mobile-alt"></i> IOS GAMING FEATURES</div>
+          <div class="setting-row"><div class="row-info"><h3>Low Power Mode Off</h3><p>Disable iOS power saving for max FPS</p></div><label class="toggle-switch"><input type="checkbox" id="low_power_off"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Do Not Disturb</h3><p>Auto enable DND when gaming</p></div><label class="toggle-switch"><input type="checkbox" id="dnd"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Auto-Lock Disable</h3><p>Prevent screen from sleeping</p></div><label class="toggle-switch"><input type="checkbox" id="autolock_off"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Reduce Motion</h3><p>Disable iOS animations for performance</p></div><label class="toggle-switch"><input type="checkbox" id="reduce_motion"><span class="slider"></span></label></div>
+        </div>
+        <div class="group-card">
+          <div class="group-header"><i class="fas fa-wifi"></i> NETWORK OPTIMIZATION</div>
+          <div class="setting-row"><div class="row-info"><h3>Wi-Fi Priority</h3><p>Force stable Wi-Fi connection</p></div><label class="toggle-switch"><input type="checkbox" id="wifi_priority"><span class="slider"></span></label></div>
+          <div class="setting-row"><div class="row-info"><h3>Background App Refresh Off</h3><p>Disable background data usage</p></div><label class="toggle-switch"><input type="checkbox" id="bg_refresh_off"><span class="slider"></span></label></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== PREMIUM SLIDING NAVBAR ===== -->
+  <div id="globalNavbar" class="bottom-nav-pill" style="display:none;">
+    <!-- Sliding indicator pill with cute Fox -->
+    <div class="nav-slider-pill" id="navSliderPill">
+      <div class="cute-fox riding">
+        <svg viewBox="0 0 100 100" class="fox-svg">
+          <!-- Ears with black tips -->
+          <path d="M30 30l-12-18 15 5z" fill="#ff7a00"/>
+          <path d="M30 30l-8-12 5 4z" fill="#333"/>
+          <path d="M70 30l12-18-15 5z" fill="#ff7a00"/>
+          <path d="M70 30l8-12-5 4z" fill="#333"/>
+          <!-- Head -->
+          <path d="M30 40c0-10 10-18 20-18s20 8 20 18-5 15-20 15-20-5-20-15z" fill="#ff7a00"/>
+          <!-- Body -->
+          <path d="M35 55c0-5 10-10 15-10s15 5 15 10v20c0 10-5 15-15 15s-15-5-15-15V55z" fill="#ff7a00"/>
+          <!-- White Face Patches -->
+          <path d="M35 48c0 5 5 8 15 8s15-3 15-8-5-5-15-5-15 0-15 5z" fill="white" opacity="0.8"/>
+          <!-- Eyes & Nose -->
+          <circle cx="43" cy="42" r="2.5" fill="#000"/>
+          <circle cx="57" cy="42" r="2.5" fill="#000"/>
+          <circle cx="50" cy="50" r="2" fill="#000"/>
+          <!-- Paws holding the pill -->
+          <rect x="30" y="55" width="10" height="10" rx="3" fill="#333"/>
+          <rect x="60" y="55" width="10" height="10" rx="3" fill="#333"/>
+          <!-- Bushy Tail with white tip -->
+          <path d="M65 70c10 0 15 5 15 15s-5 10-15 10h-5v-15c0-10 5-10 5-10z" fill="#ff7a00"/>
+          <path d="M75 80c5 0 8 5 8 8s-3 5-8 5-5-5-5-5 5-8 5-8z" fill="white"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="nav-pill-item active" id="navItem-0" onclick="navTo(0)">
+      <i class="fas fa-th-large nav-icon"></i>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-pill-item" id="navItem-1" onclick="navTo(1)">
+      <i class="fas fa-gamepad nav-icon"></i>
+      <span class="nav-label">Feature</span>
+    </div>
+    <div class="nav-pill-item" id="navItem-2" onclick="navTo(2)">
+      <i class="fas fa-bullseye nav-icon"></i>
+      <span class="nav-label">Status</span>
+    </div>
+    <div class="nav-pill-item" id="navItem-3" onclick="navTo(3)">
+      <i class="fas fa-user-circle nav-icon"></i>
+      <span class="nav-label">Profile</span>
+    </div>
+  </div>
+
+  <!-- Screen 4: Saii Process -->
+  <div id="saiiScreen" class="screen">
+    <div class="container">
+      <!-- Terminal Effect Background -->
+      <div class="terminal-bg"></div>
+      
+      <div class="saii-content">
+        <!-- Header -->
+        <div class="saii-header">
+          <div class="saii-logo">
+            <div class="logo-icon" style="background: none; box-shadow: none; border-radius: 0; width: 100px; height: 100px;">
+              <img src="GODDATAX-removebg-preview.png" alt="GODDATAX Logo" style="width: 100%; height: 100%; object-fit: contain;">
+            </div>
+            <div class="logo-text">
+              <h1 class="saii-title">GODDATAX</h1>
+              <p class="saii-subtitle">IOS 14.0 - 26.1</p>
+              <p class="saii-author">by Kutoo • Lifetime Access</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Process Area -->
+        <div class="process-area">
+          <div class="process-header">
+            <div class="animated-icon">
+              <div class="icon-core">
+                <i class="fas fa-terminal"></i>
+              </div>
+              <div class="icon-ring"></div>
+              <div class="icon-pulse"></div>
+            </div>
+            <h2 class="process-title">Saii Process</h2>
+          </div>
+          
+          <!-- Terminal Output -->
+          <div class="terminal-output">
+            <div class="terminal-line" id="line1">
+              <span class="prompt">$></span>
+              <span class="command">sudo ./saii.sh --target freefire</span>
+            </div>
+            
+            <div class="terminal-line typing" id="line2">
+              <span class="prompt">$></span>
+              <span class="text" id="text2"></span>
+            </div>
+            
+            <div class="terminal-line" id="line3">
+              <span class="prompt">$></span>
+              <span class="text" id="text3"></span>
+            </div>
+            
+            <div class="terminal-line" id="line4">
+              <span class="prompt">$></span>
+              <span class="text" id="text4"></span>
+            </div>
+            
+            <div class="terminal-line" id="line5">
+              <span class="prompt">$></span>
+              <span class="text" id="text5"></span>
+            </div>
+          </div>
+          
+          <!-- Progress Bar -->
+          <div class="terminal-progress">
+            <div class="progress-label">
+              <span>Initializing...</span>
+              <span class="progress-percent">0%</span>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar" id="progressBar"></div>
+              <div class="progress-glow"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+
+  <!-- Notification Toast -->
+  <div id="notification" class="notification">
+    <div class="notification-icon">
+      <i class="fas fa-info-circle"></i>
+    </div>
+    <span id="notificationText"></span>
+  </div>
+
+  <!-- Screen 6: Maintenance/Update Screen -->
+  <div id="maintenanceScreen" class="screen">
+    <div class="container">
+      <div class="animated-bg">
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+      </div>
+      
+      <div class="maintenance-content">
+        <div class="maintenance-icon">
+          <i class="fas fa-tools"></i>
+          <div class="icon-pulse"></div>
+        </div>
+        
+        <h1 class="maintenance-title">PEMBARUAN SISTEM</h1>
+        <p class="maintenance-subtitle">GODDATAX sedang dalam optimalisasi</p>
+        
+        <div class="maintenance-card">
+          <div class="progress-info">
+            <span>Memperbarui Fitur...</span>
+            <span class="status-badge">MAINTENANCE</span>
+          </div>
+          <div class="maintenance-progress">
+            <div class="m-progress-bar"></div>
+          </div>
+          <p class="maintenance-text">
+            Kami sedang melakukan pemeliharaan rutin untuk meningkatkan pengalaman Anda. 
+            Semua fitur sementara dinonaktifkan. Silakan periksa kembali nanti.
+          </p>
+        </div>
+        
+        <div class="contact-admin">
+          <p>Butuh bantuan? Hubungi Admin</p>
+          <div class="admin-links">
+            <a href="https://discord.gg/3dzSsEDhTZ" target="_blank" class="admin-btn"><i class="fab fa-discord"></i> Discord</a>
+            <a href="https://chat.whatsapp.com/GfJgfcyem0WBuRBMkMWrLY?mode=wwt" target="_blank" class="admin-btn"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Screen 7: Paused Screen -->
+  <div id="pausedScreen" class="screen">
+    <div class="container">
+      <div class="animated-bg">
+        <div class="bg-particle"></div>
+        <div class="bg-particle"></div>
+      </div>
+      
+      <div class="maintenance-content">
+        <div class="maintenance-icon" style="color: #ffcc00; border-color: #ffcc00; background: rgba(255, 204, 0, 0.1);">
+          <i class="fas fa-pause"></i>
+          <div class="icon-pulse" style="border-color: rgba(255, 204, 0, 0.3);"></div>
+        </div>
+        
+        <h1 class="maintenance-title" style="background: linear-gradient(135deg, #ffcc00, #ffae00); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">LISENSI DITANGGUHKAN</h1>
+        <p class="maintenance-subtitle">Lisensi Anda sementara dinonaktifkan</p>
+        
+        <div class="maintenance-card" style="border-color: rgba(255, 204, 0, 0.3);">
+          <p class="maintenance-text">
+            Masa aktif lisensi Anda telah dipause oleh admin. 
+            Silakan hubungi admin untuk mengaktifkan kembali akses Anda.
+          </p>
+        </div>
+        
+        <div class="contact-admin">
+          <p>Butuh bantuan? Hubungi Admin</p>
+          <div class="admin-links">
+            <a href="https://discord.gg/3dzSsEDhTZ" target="_blank" class="admin-btn"><i class="fab fa-discord"></i> Discord</a>
+            <a href="https://chat.whatsapp.com/GfJgfcyem0WBuRBMkMWrLY?mode=wwt" target="_blank" class="admin-btn"><i class="fab fa-whatsapp"></i> WhatsApp</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

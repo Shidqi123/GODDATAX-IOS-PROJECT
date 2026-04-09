@@ -1,0 +1,35 @@
+{
+  "name": "GODDATAX",
+  "short_name": "GODDATAX",
+  "description": "GODDATAX - iOS Tool",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#ff7a00",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["utilities", "games"],
+  "shortcuts": [
+    {
+      "name": "Launch Free Fire",
+      "short_name": "Saii",
+      "description": "Launch Free Fire with features",
+      "url": "/#saii",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
