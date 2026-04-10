@@ -734,7 +734,7 @@ function executeLaunch() {
   // Trigger terminal animation AFTER bottom sheet closes
   setTimeout(() => {
     runTerminalAnimation();
-  }, 450);
+  }, 100);
 }
 
 // REAL LAUNCH APP
