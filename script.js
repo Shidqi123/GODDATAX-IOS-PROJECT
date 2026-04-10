@@ -1,6 +1,6 @@
 // Initialize Supabase Client
-const _supabase = (typeof supabase !== 'undefined') 
-  ? supabase.createClient(APP_CONFIG.supabase.url, APP_CONFIG.supabase.key) 
+const _supabase = (typeof supabase !== 'undefined')
+  ? supabase.createClient(APP_CONFIG.supabase.url, APP_CONFIG.supabase.key)
   : null;
 
 // Global variable untuk keys (deprecated but kept for compatibility)
@@ -35,17 +35,17 @@ function getHWID() {
 async function checkLogin() {
   const keyInput = document.getElementById('loginKey');
   const keyStatus = document.getElementById('keyStatus');
-  
+
   if (!keyInput) return;
-  
+
   const key = keyInput.value.trim().toUpperCase();
-  
+
   if (!key) {
     showNotification('Masukkan lisensi Anda');
     keyInput.focus();
     return;
   }
-  
+
   if (!_supabase) {
     showNotification('System error: Supabase not ready');
     return;
@@ -54,7 +54,7 @@ async function checkLogin() {
   // UI Loading
   showNotification('Memverifikasi lisensi...');
   if (keyStatus) keyStatus.innerHTML = '<i class="fas fa-spinner fa-spin" style="color:#ff0000"></i>';
-  
+
   try {
     // Query ke tabel licenses_ios
     const { data, error } = await _supabase
@@ -94,7 +94,7 @@ async function checkLogin() {
         .from(APP_CONFIG.supabase.tableName)
         .update({ hwid: currentHWID, is_online: true, last_seen: new Date().toISOString() })
         .eq('license', key);
-        
+
       if (updateError) {
         console.error('Update Error:', updateError);
         throw new Error('Gagal menyimpan HWID: ' + updateError.message);
@@ -111,15 +111,15 @@ async function checkLogin() {
     console.log('✅ ACCESS GRANTED for key:', key);
     if (keyStatus) keyStatus.innerHTML = '<i class="fas fa-check" style="color:#00ff88"></i>';
     showNotification(`Login Berhasil!`);
-    
+
     // Save session
     localStorage.setItem('saiSession', 'active_forever');
     localStorage.setItem('loginKey', key);
     localStorage.setItem('loginTime', new Date().toISOString());
-    
+
     // Start Heartbeat
     startHeartbeat(key);
-    
+
     // Redirect to swipe home
     setTimeout(() => {
       // Hide login screen first
@@ -127,14 +127,14 @@ async function checkLogin() {
       showSwiper();
       navTo(0, false);
     }, 800);
-    
+
   } catch (err) {
     console.error('❌ Login error:', err.message);
     if (keyStatus) keyStatus.innerHTML = '<i class="fas fa-times" style="color:#ff0000"></i>';
-    
+
     // Tampilkan detail error kepada pengguna langsung
     showNotification(err.message);
-    
+
     // Animasi shake
     keyInput.style.animation = 'shake 0.5s';
     setTimeout(() => {
@@ -164,13 +164,13 @@ let dragOffset = 0;
 // Navigate to a tab index (0-3) with smooth swipe
 function navTo(index, animate = true) {
   if (index < 0 || index >= SWIPE_SCREENS.length) return;
-  
+
   // Ensure we are in swipe mode if coming from a full screen overlay
   const container = document.getElementById('swipeContainer');
   if (container && container.style.display === 'none') {
     showSwiper();
   }
-  
+
   currentTab = index;
 
   const track = document.getElementById('swipeTrack');
@@ -200,10 +200,10 @@ function updateProfileData() {
 
   if (iosVerEl) {
     const ua = navigator.userAgent;
-    
+
     // Primary: Match iOS/iPadOS version from UA string
     const iosMatch = ua.match(/(?:iPhone|iPad|iPod).*?OS (\d+)[_\.](\d+)(?:[_\.](\d+))?/);
-    
+
     if (iosMatch) {
       const major = iosMatch[1];
       const minor = iosMatch[2];
@@ -261,7 +261,7 @@ function showSwiper() {
   const navbar = document.getElementById('globalNavbar');
   if (container) container.style.display = 'block';
   if (navbar) navbar.style.display = 'flex';
-  
+
   // Refresh layout after appearing
   setTimeout(() => {
     navTo(currentTab || 0, false);
@@ -370,76 +370,30 @@ function initSwipeGestures() {
 
 
 
-// Deteksi Aplikasi IPA (Free Fire)
+// Deteksi Aplikasi berdasarkan riwayat launch (tersimpan di localStorage)
 function detectGames() {
   const ffStatus = document.getElementById('ff-status-ui');
   const ffMaxStatus = document.getElementById('ffmax-status-ui');
   const indFF = document.getElementById('indicator-ff');
   const indFFMax = document.getElementById('indicator-ffmax');
 
-  showNotification('Scanning installed apps...');
+  // Baca status dari localStorage (diupdate saat user launch game)
+  const hasFF = localStorage.getItem('ff_installed') === 'true';
+  const hasFFMax = localStorage.getItem('ffmax_installed') === 'true';
 
-  // Set semua ke CHECKING state
-  if (ffStatus) { ffStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING'; ffStatus.className = 'status-btn'; }
-  if (ffMaxStatus) { ffMaxStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING'; ffMaxStatus.className = 'status-btn'; }
-  if (indFF) indFF.className = 'game-status-indicator offline';
-  if (indFFMax) indFFMax.className = 'game-status-indicator offline';
+  // Update indicator FF
+  if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
+  if (ffStatus) {
+    ffStatus.textContent = hasFF ? 'DETECTED' : 'NOT INSTALLED';
+    ffStatus.className = hasFF ? 'status-btn installed' : 'status-btn not-installed';
+  }
 
-  /**
-   * Deteksi menggunakan invisible link click (bukan window.location.href)
-   * Cara ini TIDAK langsung membuka app, hanya mencoba trigger URL scheme
-   * Firefox/Safari iOS: jika app ada, iOS akan membuka app & halaman menjadi hidden
-   */
-  const checkApp = (scheme, onResult) => {
-    let opened = false;
-
-    const onVisibility = () => {
-      if (document.hidden) {
-        opened = true;
-        cleanup(true);
-      }
-    };
-
-    const cleanup = (found) => {
-      document.removeEventListener('visibilitychange', onVisibility);
-      clearTimeout(timer);
-      onResult(found);
-    };
-
-    document.addEventListener('visibilitychange', onVisibility);
-
-    // Buat link tak terlihat dan klik — tidak navigasi halaman
-    const link = document.createElement('a');
-    link.href = scheme;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    setTimeout(() => document.body.removeChild(link), 100);
-
-    // Jika 2.5s tidak ada visibilitychange → app tidak ada
-    const timer = setTimeout(() => cleanup(false), 2500);
-  };
-
-  // Cek FF biasa dulu
-  checkApp('freefire://', (hasFF) => {
-    if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
-    if (ffStatus) {
-      ffStatus.textContent = hasFF ? 'DETECTED' : 'NOT DETECTED';
-      ffStatus.className = hasFF ? 'status-btn installed' : 'status-btn not-installed';
-    }
-
-    // Setelah FF selesai, cek FF MAX
-    setTimeout(() => {
-      checkApp('freefiremax://', (hasFFMax) => {
-        if (indFFMax) indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
-        if (ffMaxStatus) {
-          ffMaxStatus.textContent = hasFFMax ? 'DETECTED' : 'NOT DETECTED';
-          ffMaxStatus.className = hasFFMax ? 'status-btn installed' : 'status-btn not-installed';
-        }
-        showNotification('Scan selesai');
-      });
-    }, 500);
-  });
+  // Update indicator FF MAX
+  if (indFFMax) indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
+  if (ffMaxStatus) {
+    ffMaxStatus.textContent = hasFFMax ? 'DETECTED' : 'NOT INSTALLED';
+    ffMaxStatus.className = hasFFMax ? 'status-btn installed' : 'status-btn not-installed';
+  }
 }
 
 // Tampilkan notifikasi
@@ -451,15 +405,15 @@ function showNotification(message) {
 
   const notification = document.getElementById('notification');
   const notificationText = document.getElementById('notificationText');
-  
+
   if (!notification || !notificationText) {
     console.log('📢 Notification:', message);
     return;
   }
-  
+
   notificationText.textContent = message;
   notification.classList.add('show');
-  
+
   // Auto hide setelah 3 detik
   setTimeout(() => {
     notification.classList.remove('show');
@@ -471,12 +425,12 @@ function updateDynamicIsland(text, type = 'success', duration = 3000) {
   const island = document.getElementById('dynamicStatus');
   const islandText = island?.querySelector('.island-text');
   const islandIcon = island?.querySelector('.island-icon i');
-  
+
   if (!island || !islandText) return;
 
   // Set Content
   islandText.textContent = text.toUpperCase();
-  
+
   // Set Icon based on type
   if (type === 'error') {
     islandIcon.className = 'fas fa-exclamation-triangle';
@@ -492,7 +446,7 @@ function updateDynamicIsland(text, type = 'success', duration = 3000) {
   // Show and Expand
   island.classList.add('show');
   island.classList.add('expanded');
-  
+
   if (duration > 0) {
     setTimeout(() => {
       island.classList.remove('expanded');
@@ -508,13 +462,13 @@ function updateDynamicIsland(text, type = 'success', duration = 3000) {
 function checkSession() {
   const session = localStorage.getItem('saiSession');
   const savedKey = localStorage.getItem('loginKey');
-  
+
   if (session === 'active_forever' && savedKey) {
     showScreen('mainScreen');
     startHeartbeat(savedKey); // Monitoring status real-time
     return true;
   }
-  
+
   showScreen('loginScreen');
   return false;
 }
@@ -523,7 +477,7 @@ function checkSession() {
 let heartbeatInterval;
 function startHeartbeat(licenseKey) {
   if (heartbeatInterval) clearInterval(heartbeatInterval);
-  
+
   heartbeatInterval = setInterval(async () => {
     if (!licenseKey) return;
 
@@ -547,24 +501,24 @@ function startHeartbeat(licenseKey) {
       // Check Real-time Status Switching
       const activeScreen = document.querySelector('.screen.active');
       const isSwipeMode = document.getElementById('swipeContainer').style.display === 'block';
-      
+
       if (data.status === 'paused') {
         if ((isSwipeMode) || (activeScreen && activeScreen.id !== 'pausedScreen')) {
-           // Jika sedang di swipe mode, sembunyikan swiper dulu
-           if (isSwipeMode) {
-             document.getElementById('swipeContainer').style.display = 'none';
-             if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
-           }
-           showScreen('pausedScreen');
+          // Jika sedang di swipe mode, sembunyikan swiper dulu
+          if (isSwipeMode) {
+            document.getElementById('swipeContainer').style.display = 'none';
+            if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
+          }
+          showScreen('pausedScreen');
         }
       } else if (data.status === 'active') {
         if (activeScreen && activeScreen.id === 'pausedScreen') {
-           // Jika kembali aktif, kembalikan ke swiper jika sebelumnya di sana
-           if (localStorage.getItem('saiSession')) {
-             showSwiper();
-           } else {
-             showScreen('mainScreen');
-           }
+          // Jika kembali aktif, kembalikan ke swiper jika sebelumnya di sana
+          if (localStorage.getItem('saiSession')) {
+            showSwiper();
+          } else {
+            showScreen('mainScreen');
+          }
         }
       }
 
@@ -575,7 +529,7 @@ function startHeartbeat(licenseKey) {
         clearSession();
         showNotification('Keamanan: Lisensi digunakan di HP lain');
       }
-      
+
       // Update Heartbeat / Last Seen
       await _supabase
         .from(APP_CONFIG.supabase.tableName)
@@ -592,10 +546,10 @@ function startHeartbeat(licenseKey) {
 function clearSession() {
   console.log('Clearing session...');
   if (heartbeatInterval) clearInterval(heartbeatInterval);
-  
+
   const savedKey = localStorage.getItem('loginKey');
   localStorage.clear();
-  
+
   // Hide swiper + navbar, show login
   const container = document.getElementById('swipeContainer');
   const navbar = document.getElementById('globalNavbar');
@@ -624,35 +578,35 @@ function runTerminalAnimation() {
     showNotification('Please login first');
     return;
   }
-  
+
   showScreen('saiiScreen');
-  
+
   const progressBar = document.getElementById('progressBar');
   const progressPercent = document.querySelector('.progress-percent');
   const progressLabel = document.querySelector('.progress-label span');
-  
+
   // Reset progress
   if (progressBar) progressBar.style.width = '0%';
   if (progressPercent) progressPercent.textContent = '0%';
   if (progressLabel) progressLabel.textContent = 'Initializing...';
-  
+
   const termTarget = document.getElementById('terminal-target');
   if (termTarget) termTarget.textContent = selectedAppToLaunch === 'ff' ? 'freefire' : 'freefiremax';
-  
+
   const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
-  
+
   // Clear semua text elements terlebih dahulu
   document.getElementById('text2').textContent = '';
   document.getElementById('text3').textContent = '';
   document.getElementById('text4').textContent = '';
   document.getElementById('text5').textContent = '';
-  
+
   // Reset semua line elements
   const line2 = document.getElementById('line2');
   const line3 = document.getElementById('line3');
   const line4 = document.getElementById('line4');
   const line5 = document.getElementById('line5');
-  
+
   if (line2) {
     line2.classList.remove('active');
     line2.style.filter = 'blur(5px)';
@@ -673,7 +627,7 @@ function runTerminalAnimation() {
     line5.style.filter = 'blur(5px)';
     line5.style.opacity = '0.8';
   }
-  
+
   // Step 1: Checking system integrity...
   setTimeout(() => {
     if (line2) {
@@ -681,19 +635,19 @@ function runTerminalAnimation() {
       line2.style.filter = 'blur(0)';
       line2.style.opacity = '1';
     }
-    
+
     const text2 = document.getElementById('text2');
     if (text2) {
       text2.textContent = 'Checking system integrity...';
     }
-    
+
     updateDynamicIsland('System integrity check...', 'loading', 2000);
-    
+
     if (progressBar) progressBar.style.width = '20%';
     if (progressPercent) progressPercent.textContent = '20%';
     if (progressLabel) progressLabel.textContent = 'System check...';
   }, 500);
-  
+
   // Step 2: Preparing Free Fire environment...
   setTimeout(() => {
     if (line3) {
@@ -701,19 +655,19 @@ function runTerminalAnimation() {
       line3.style.filter = 'blur(0)';
       line3.style.opacity = '1';
     }
-    
+
     const text3 = document.getElementById('text3');
     if (text3) {
       text3.textContent = `Preparing ${appLabel} environment...`;
     }
-    
+
     updateDynamicIsland(`Preparing ${appLabel}...`, 'loading', 2000);
-    
+
     if (progressBar) progressBar.style.width = '50%';
     if (progressPercent) progressPercent.textContent = '50%';
     if (progressLabel) progressLabel.textContent = 'Preparing...';
   }, 1500);
-  
+
   // Step 3: Bypassing security protocols...
   setTimeout(() => {
     if (line4) {
@@ -721,19 +675,19 @@ function runTerminalAnimation() {
       line4.style.filter = 'blur(0)';
       line4.style.opacity = '1';
     }
-    
+
     const text4 = document.getElementById('text4');
     if (text4) {
       text4.textContent = 'Bypassing security protocols...';
     }
-    
+
     updateDynamicIsland('Bypassing protocols...', 'loading', 2000);
-    
+
     if (progressBar) progressBar.style.width = '75%';
     if (progressPercent) progressPercent.textContent = '75%';
     if (progressLabel) progressLabel.textContent = 'Security bypass...';
   }, 2500);
-  
+
   // Step 4: Launching Free Fire with optimizations...
   setTimeout(() => {
     if (line5) {
@@ -741,18 +695,18 @@ function runTerminalAnimation() {
       line5.style.filter = 'blur(0)';
       line5.style.opacity = '1';
     }
-    
+
     const text5 = document.getElementById('text5');
     if (text5) {
       text5.textContent = `Launching ${appLabel} with optimizations...`;
     }
-    
+
     updateDynamicIsland('Finalizing Launch...', 'success', 4000);
-    
+
     if (progressBar) progressBar.style.width = '100%';
     if (progressPercent) progressPercent.textContent = '100%';
     if (progressLabel) progressLabel.textContent = 'Launching...';
-    
+
     // Launch Free Fire
     setTimeout(() => launchFreeFire(), 800);
   }, 3500);
@@ -761,18 +715,18 @@ function runTerminalAnimation() {
 // Execute Launch Called from Bottom Sheet
 function executeLaunch() {
   closeBottomSheet(null);
-  
+
   // Ambil nilai dari bottom sheet
   const modeChecked = document.querySelector('input[name="perfMode"]:checked')?.value || 'balanced';
-  
+
   showNotification(`Launch initialized: ${modeChecked.toUpperCase()} mode.`);
-  
+
   // Masukkan opsi ini ke localStorage agar `launchFreeFire` bisa ngambilnya nanti
   const additionalSettings = {
     mode: modeChecked
   };
   localStorage.setItem('ffLaunchV2', JSON.stringify(additionalSettings));
-  
+
   // Trigger terminal animation
   runTerminalAnimation();
 }
@@ -784,30 +738,30 @@ function launchFreeFire() {
   const antiBan = document.getElementById('antiban')?.checked || false;
   const headshot = document.getElementById('headshot')?.checked || false;
   const recoilControl = document.getElementById('recoilcontrol')?.checked || false;
-  
+
   // Combine with sheet settings
   let modeChecked = 'balanced';
   const savedV2 = localStorage.getItem('ffLaunchV2');
-  if(savedV2) {
+  if (savedV2) {
     const v2 = JSON.parse(savedV2);
     modeChecked = v2.mode;
   }
-  
+
   const enabledFeatures = [
     aimAssist ? 'Aim Assist' : null,
     antiBan ? 'Anti-Ban' : null,
     headshot ? 'Headshot Opt' : null,
     recoilControl ? 'Recoil Control' : null
   ].filter(Boolean);
-  
+
   if (modeChecked === 'competitive') enabledFeatures.push('Competitive Mode');
-  
+
   if (enabledFeatures.length > 0) {
     showNotification(`Launching Free Fire with ${enabledFeatures.length} features enabled`);
   } else {
     showNotification('Launching Free Fire...');
   }
-  
+
   // Simpan settings (HAPUS headshotCrosshair)
   const settings = {
     aimAssist: aimAssist,
@@ -817,11 +771,11 @@ function launchFreeFire() {
     timestamp: Date.now()
   };
   localStorage.setItem('ffSettings', JSON.stringify(settings));
-  
+
   // ✅ REAL LAUNCH CODE - Mencoba berbagai skema URL untuk membuka Free Fire
   const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
   const targetScheme = selectedAppToLaunch === 'ff' ? 'freefire://' : 'freefiremax://';
-  
+
   // Combine all schemes, putting target scheme first
   const allSchemes = [
     targetScheme,
@@ -830,48 +784,51 @@ function launchFreeFire() {
     'com.dts.freefireth://',
     'com.dts.freefiremax://'
   ];
-  
+
   // Add universal fallbacks
   allSchemes.push(
     'https://freefiremobile.com/',
-    selectedAppToLaunch === 'ff' 
-      ? 'https://apps.apple.com/app/free-fire/id1300096749' 
+    selectedAppToLaunch === 'ff'
+      ? 'https://apps.apple.com/app/free-fire/id1300096749'
       : 'https://apps.apple.com/app/free-fire-max/id1543443745'
   );
 
   console.log(`🎮 Attempting to launch ${appLabel}...`);
-  
+
   let launchSuccess = false;
-  
+
   // Coba setiap skema sampai berhasil
   for (const scheme of allSchemes) {
     try {
       console.log(`Trying scheme: ${scheme}`);
-      
+
       if (scheme.startsWith('http')) {
         window.open(scheme, '_blank');
         launchSuccess = true;
         break;
       } else {
+        // Simpan status instalasi ke localStorage saat berhasil launch
+        if (selectedAppToLaunch === 'ff') {
+          localStorage.setItem('ff_installed', 'true');
+        } else {
+          localStorage.setItem('ffmax_installed', 'true');
+        }
         window.location.href = scheme;
-        launchSuccess = true; // Hard to detect failure, so we assume success for the loop
-        setTimeout(() => {
-           // If we're still here after a while, maybe it failed, but we can't easily know
-        }, 500);
+        launchSuccess = true;
         break;
       }
     } catch (error) {
-       console.log(`Failed with scheme ${scheme}:`, error);
-       continue;
+      console.log(`Failed with scheme ${scheme}:`, error);
+      continue;
     }
   }
-  
+
   // Fallback jika semua skema gagal
   setTimeout(() => {
     if (!launchSuccess) {
       console.log('❌ All direct schemes failed, showing fallback message');
       showNotification('Free Fire app not found! Please install Free Fire from your app store.');
-      
+
       // Tampilkan instruksi untuk pengguna iOS
       if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
         showNotification('For iOS: Open App Store and install Free Fire');
@@ -881,7 +838,7 @@ function launchFreeFire() {
     } else {
       console.log('✅ Free Fire launch initiated');
     }
-    
+
     // Kembali ke main screen setelah beberapa detik
     setTimeout(() => {
       showScreen('mainScreen');
@@ -897,12 +854,12 @@ let selectedAppToLaunch = 'ff';
 
 function openLaunchSheet(appType) {
   selectedAppToLaunch = appType;
-  
+
   const overlay = document.getElementById('launchBottomSheet');
   const icon = document.getElementById('sheetAppIcon');
   const name = document.getElementById('sheetAppName');
   const pkg = document.getElementById('sheetAppPackage');
-  
+
   if (appType === 'ff') {
     icon.src = 'ff_logo.jpg';
     name.textContent = 'Free Fire';
@@ -912,12 +869,12 @@ function openLaunchSheet(appType) {
     name.textContent = 'Free Fire MAX';
     pkg.textContent = 'com.dts.freefiremax';
   }
-  
+
   const btnText = document.getElementById('sheetBtnText');
   if (btnText) btnText.textContent = appType === 'ff' ? 'LOGIN FREE FIRE' : 'LOGIN FREE FIRE MAX';
-  
+
   overlay.style.display = 'flex';
-  
+
   // Minta browser render ulang display:flex sebelum nambahin class active (animasi slide up)
   setTimeout(() => {
     overlay.classList.add('active');
@@ -926,11 +883,11 @@ function openLaunchSheet(appType) {
 
 function closeBottomSheet(e) {
   if (e && e.target.closest('.bottom-sheet')) return; // Jangan tutup kalau yg di-klik adalah isi modal
-  
+
   const overlay = document.getElementById('launchBottomSheet');
   if (!overlay) return;
   overlay.classList.remove('active');
-  
+
   setTimeout(() => {
     overlay.style.display = 'none';
   }, 400); // Tunggu durasi CSS transition selesai
@@ -949,35 +906,35 @@ function startSaii() {
 // ==============================================
 // 5. INITIALIZATION
 // ==============================================
-document.addEventListener('DOMContentLoaded', async function() {
+document.addEventListener('DOMContentLoaded', async function () {
   console.log('📱 DOM Content Loaded - Starting GODDATAX...');
-  
+
   // Init swipe gestures
   initSwipeGestures();
-  
+
   // 🔥 MAINTENANCE / UPDATE CHECK 🔥
   if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.isUpdating) {
     console.log('🚧 System is in maintenance mode. Blocking access.');
     showScreen('maintenanceScreen');
     return;
   }
-  
+
   // Step 2: Check session & Status
   console.log('Step 2: Checking session...');
   const session = localStorage.getItem('saiSession');
   const savedKey = localStorage.getItem('loginKey');
-  
+
   if (session === 'active_forever' && savedKey) {
     // Validasi lisensi sebelum masuk menu
     validateLicenseOnStart(savedKey);
   } else {
     showScreen('loginScreen');
   }
-  
+
   // Step 3: Setup event listeners
   console.log('Step 3: Setting up event listeners...');
   setupEventListeners();
-  
+
   // Step 4: Show welcome message
   setTimeout(() => {
     console.log('🎉 GODDATAX Ready!');
@@ -993,14 +950,14 @@ async function validateLicenseOnStart(licenseKey) {
     navTo(0, false);
     return;
   }
-  
+
   try {
     const { data, error } = await _supabase
       .from(APP_CONFIG.supabase.tableName)
       .select('*')
       .eq('license', licenseKey)
       .single();
-      
+
     if (error) {
       if (error.code === 'PGRST116') {
         clearSession();
@@ -1012,20 +969,20 @@ async function validateLicenseOnStart(licenseKey) {
       startHeartbeat(licenseKey);
       return;
     }
-    
+
     if (data.status === 'paused') {
       showScreen('pausedScreen');
       startHeartbeat(licenseKey);
       return;
     }
-    
+
     const currentHWID = getHWID();
     if (data.hwid && data.hwid !== currentHWID) {
       showNotification('Lisensi terikat di perangkat lain');
       clearSession();
       return;
     }
-    
+
     // OK - show swiper
     showSwiper();
     navTo(0, false);
@@ -1043,7 +1000,7 @@ function setupEventListeners() {
   // Login input dan button
   const loginInput = document.getElementById('loginKey');
   const loginBtn = document.querySelector('.login-btn');
-  
+
   if (loginInput) {
     // Enter key untuk login
     loginInput.addEventListener('keypress', (e) => {
@@ -1052,7 +1009,7 @@ function setupEventListeners() {
         checkLogin();
       }
     });
-    
+
     // Update status icon
     loginInput.addEventListener('input', () => {
       const keyStatus = document.getElementById('keyStatus');
@@ -1064,18 +1021,18 @@ function setupEventListeners() {
         }
       }
     });
-    
+
     // Auto focus
     setTimeout(() => {
       loginInput.focus();
       console.log('🎯 Login input focused');
     }, 800);
   }
-  
+
   if (loginBtn) {
     loginBtn.addEventListener('click', checkLogin);
   }
-  
+
   // Saii button
   const saiiBtn = document.querySelector('.saii-btn');
   if (saiiBtn) {
@@ -1084,13 +1041,13 @@ function setupEventListeners() {
       startSaii();
     });
   }
-  
+
   // Toggle switches
   document.querySelectorAll('.toggle-switch input').forEach(toggle => {
-    toggle.addEventListener('change', function() {
+    toggle.addEventListener('change', function () {
       const saved = localStorage.getItem('ffSettings');
       let settings = saved ? JSON.parse(saved) : {};
-      
+
       // Hanya simpan jika bukan headshotcrosshair
       if (this.id !== 'headshotcrosshair') {
         settings[this.id] = this.checked;
@@ -1099,12 +1056,12 @@ function setupEventListeners() {
       }
     });
   });
-  
+
   // Setup notification test buttons
   document.querySelectorAll('.card').forEach(card => {
     const text = card.querySelector('h3')?.textContent;
     if (text && (text.includes('Restart') || text.includes('Reboot'))) {
-      card.addEventListener('click', function() {
+      card.addEventListener('click', function () {
         showNotification(`✅ ${text} completed successfully`);
       });
     }
@@ -1114,19 +1071,19 @@ function setupEventListeners() {
 // ==============================================
 // 6. OVERRIDE DEFAULT BROWSER FUNCTIONS
 // ==============================================
-window.alert = function(message) {
+window.alert = function (message) {
   console.log('⚠️ Alert intercepted:', message);
   showNotification(message);
   return undefined;
 };
 
-window.confirm = function(message) {
+window.confirm = function (message) {
   console.log('❓ Confirm intercepted:', message);
   showNotification(message + ' (Press OK to continue)');
   return true; // Always return true untuk convenience
 };
 
-window.prompt = function(message) {
+window.prompt = function (message) {
   console.log('💬 Prompt intercepted:', message);
   showNotification(message);
   return 'user_input'; // Default value
@@ -1162,14 +1119,14 @@ console.log('✅ script.js loaded successfully');
 
 function switchAppTab(tabId) {
   console.log("Switching tab to:", tabId);
-  
+
   // Update Tab Content
   document.querySelectorAll(".tab-content").forEach(tab => {
     tab.classList.remove("active");
   });
   const targetTab = document.getElementById("tab-" + tabId);
   if (targetTab) targetTab.classList.add("active");
-  
+
   // Update Navbar Icons
   document.querySelectorAll(".nav-item").forEach(item => {
     item.classList.remove("active");
@@ -1177,7 +1134,7 @@ function switchAppTab(tabId) {
       item.classList.add("active");
     }
   });
-  
+
   // Back to top
   window.scrollTo(0, 0);
 }
@@ -1186,12 +1143,12 @@ function switchAppTab(tabId) {
 function updateGameStatus() {
   const ffBadge = document.getElementById("ff-badge");
   const ffMaxBadge = document.getElementById("ffmax-badge");
-  
+
   if (ffBadge) {
     ffBadge.textContent = "Activated";
     ffBadge.className = "status-badge status-active";
   }
-  
+
   if (ffMaxBadge) {
     ffMaxBadge.textContent = "Deactivated";
     ffMaxBadge.className = "status-badge status-deactive";
@@ -1200,5 +1157,5 @@ function updateGameStatus() {
 
 // Call on startup
 document.addEventListener("DOMContentLoaded", () => {
-    setTimeout(updateGameStatus, 2000);
+  setTimeout(updateGameStatus, 2000);
 });
