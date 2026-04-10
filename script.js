@@ -164,6 +164,13 @@ let dragOffset = 0;
 // Navigate to a tab index (0-3) with smooth swipe
 function navTo(index, animate = true) {
   if (index < 0 || index >= SWIPE_SCREENS.length) return;
+  
+  // Ensure we are in swipe mode if coming from a full screen overlay
+  const container = document.getElementById('swipeContainer');
+  if (container && container.style.display === 'none') {
+    showSwiper();
+  }
+  
   currentTab = index;
 
   const track = document.getElementById('swipeTrack');
