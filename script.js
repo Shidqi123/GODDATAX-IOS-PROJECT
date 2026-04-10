@@ -735,8 +735,8 @@ function executeLaunch() {
   }, 100);
 }
 
-// REAL LAUNCH APP
-function launchFreeFire() {
+// ✅ REAL LAUNCH APP
+async function launchFreeFire() {
   // Ambil base settings dari DOM
   const aimAssist = document.getElementById('aim')?.checked || false;
   const antiBan = document.getElementById('antiban')?.checked || false;
@@ -766,7 +766,7 @@ function launchFreeFire() {
     showNotification('Launching Free Fire...');
   }
 
-  // Simpan settings (HAPUS headshotCrosshair)
+  // Simpan settings
   const settings = {
     aimAssist: aimAssist,
     antiBan: antiBan,
@@ -776,16 +776,13 @@ function launchFreeFire() {
   };
   localStorage.setItem('ffSettings', JSON.stringify(settings));
 
-// ✅ REAL LAUNCH CODE - Mencoba berbagai skema URL untuk membuka Free Fire
-async function launchFreeFire() {
   const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
-  
   console.log(`🎮 Attempting to launch ${appLabel}...`);
 
   // We only attempt the MOST likely scheme to avoid multiple Safari popups
   const scheme = selectedAppToLaunch === 'ff' ? 'freefire://' : 'freefiremax://';
   
-  // Set success flag based on blur (standard technique for scheme detection)
+  // Set success flag based on blur
   let blurDetected = false;
   window.onblur = () => { blurDetected = true; };
 
@@ -799,15 +796,15 @@ async function launchFreeFire() {
       const missingApp = selectedAppToLaunch === 'ff' ? 'FreeFiree' : 'FreeFiree Max';
       showNotification(`Anda Tidak Menginstall ${missingApp}`);
       
-      // Update our internal detection to RED if it failed
+      // Update our internal detection
       if (selectedAppToLaunch === 'ff') localStorage.removeItem('ff_installed');
       else localStorage.removeItem('ffmax_installed');
-      detectGames(); // Refresh UI
+      detectGames(); 
     } else {
       console.log('✅ App launch successful');
       if (selectedAppToLaunch === 'ff') localStorage.setItem('ff_installed', 'true');
       else localStorage.setItem('ffmax_installed', 'true');
-      detectGames(); // Refresh UI
+      detectGames(); 
     }
     
     // Cleanup callback
