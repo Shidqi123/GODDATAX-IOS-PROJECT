@@ -8,9 +8,9 @@ const APP_CONFIG = {
   isUpdating: false,
 
   // iOS Support
-  minIOSVersion: "14.0",
-  maxIOSVersion: "26.1",
-  supportedVersions: "14.0 - 26.1",
+  minIOSVersion: "15.0",
+  maxIOSVersion: "26.4",
+  supportedVersions: "15.0 - 26.4",
 
   // Free Fire Settings
   freeFireSchemes: [
