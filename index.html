@@ -179,8 +179,9 @@
             <div class="game-name-info">
               <h3>Free Fire</h3>
               <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefireth</p>
+              <div id="ff-status-ui" class="status-btn" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">CHECKING...</div>
             </div>
-            <div class="game-status-indicator online"></div>
+            <div id="indicator-ff" class="game-status-indicator online"></div>
           </div>
           <div class="game-horizontal-card" onclick="openLaunchSheet('ffmax')">
             <div class="game-icon-square">
@@ -189,8 +190,9 @@
             <div class="game-name-info">
               <h3>Free Fire MAX</h3>
                <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefiremax</p>
+               <div id="ffmax-status-ui" class="status-btn" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">CHECKING...</div>
             </div>
-            <div class="game-status-indicator offline"></div>
+            <div id="indicator-ffmax" class="game-status-indicator offline"></div>
           </div>
         </div>
 
@@ -446,7 +448,7 @@
           <div class="terminal-output">
             <div class="terminal-line" id="line1">
               <span class="prompt">$></span>
-              <span class="command">sudo ./saii.sh --target freefire</span>
+              <span class="command">sudo ./saii.sh --target <span id="terminal-target">freefire</span></span>
             </div>
             
             <div class="terminal-line typing" id="line2">
