@@ -389,6 +389,8 @@ function detectGames() {
   // Baca status dari localStorage (diupdate saat user launch game)
   const hasFF = localStorage.getItem('ff_installed') === 'true';
   const hasFFMax = localStorage.getItem('ffmax_installed') === 'true';
+  
+  console.log('🎮 Scanning games:', { hasFF, hasFFMax });
 
   // Update indicator FF
   if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
@@ -800,16 +802,16 @@ async function launchFreeFire() {
       if (selectedAppToLaunch === 'ff') localStorage.removeItem('ff_installed');
       else localStorage.removeItem('ffmax_installed');
       detectGames(); 
-    } else {
-      console.log('✅ App launch successful');
+    // Cleanup callback
+    window.onblur = null;
+    
+    if (blurDetected) {
+      console.log('✅ App launch likely successful');
       if (selectedAppToLaunch === 'ff') localStorage.setItem('ff_installed', 'true');
       else localStorage.setItem('ffmax_installed', 'true');
       detectGames(); 
     }
-    
-    // Cleanup callback
-    window.onblur = null;
-    
+
     // Return to main screen
     setTimeout(() => {
       isTerminalActive = false;
