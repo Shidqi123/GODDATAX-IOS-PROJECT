@@ -187,11 +187,6 @@ function navTo(index, animate = true) {
 
   // Animate the sliding pill indicator
   updateSliderPill(index);
-
-  // Trigger game detection if going to Status tab
-  if (index === 2) {
-    detectGames();
-  }
 }
 
 // Helper function to update Profile data
@@ -376,7 +371,7 @@ function initSwipeGestures() {
 
 
 // Deteksi Aplikasi IPA (Free Fire)
-async function detectGames() {
+function detectGames() {
   const ffStatus = document.getElementById('ff-status-ui');
   const ffMaxStatus = document.getElementById('ffmax-status-ui');
   const indFF = document.getElementById('indicator-ff');
@@ -384,75 +379,67 @@ async function detectGames() {
 
   showNotification('Scanning installed apps...');
 
-  // Set both to CHECKING/loading state
-  const setChecking = (el, ind) => {
-    if (el) { el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING'; el.className = 'status-btn'; }
-    if (ind) ind.className = 'game-status-indicator offline';
-  };
-  setChecking(ffStatus, indFF);
-  setChecking(ffMaxStatus, indFFMax);
+  // Set semua ke CHECKING state
+  if (ffStatus) { ffStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING'; ffStatus.className = 'status-btn'; }
+  if (ffMaxStatus) { ffMaxStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SCANNING'; ffMaxStatus.className = 'status-btn'; }
+  if (indFF) indFF.className = 'game-status-indicator offline';
+  if (indFFMax) indFFMax.className = 'game-status-indicator offline';
 
   /**
-   * iOS App Detection via URL Scheme + Page Visibility
-   * - Redirect to custom scheme (e.g., freefire://)
-   * - If app is installed, iOS will open it and this page goes to background (hidden)
-   * - We detect that with visibilitychange event
-   * - If no visibility change within ~2s, app is NOT installed
+   * Deteksi menggunakan invisible link click (bukan window.location.href)
+   * Cara ini TIDAK langsung membuka app, hanya mencoba trigger URL scheme
+   * Firefox/Safari iOS: jika app ada, iOS akan membuka app & halaman menjadi hidden
    */
-  const checkApp = (scheme) => {
-    return new Promise((resolve) => {
-      let appOpened = false;
-      
-      // Listen for page losing visibility = app was opened
-      const onHide = () => {
-        if (document.hidden) {
-          appOpened = true;
-          cleanup();
-          resolve(true);
-        }
-      };
+  const checkApp = (scheme, onResult) => {
+    let opened = false;
 
-      const cleanup = () => {
-        document.removeEventListener('visibilitychange', onHide);
-        clearTimeout(timer);
-      };
+    const onVisibility = () => {
+      if (document.hidden) {
+        opened = true;
+        cleanup(true);
+      }
+    };
 
-      document.addEventListener('visibilitychange', onHide);
+    const cleanup = (found) => {
+      document.removeEventListener('visibilitychange', onVisibility);
+      clearTimeout(timer);
+      onResult(found);
+    };
 
-      // If no visibility change within 2.5s, app not installed
-      const timer = setTimeout(() => {
-        cleanup();
-        resolve(false);
-      }, 2500);
+    document.addEventListener('visibilitychange', onVisibility);
 
-      // Try to open the custom URL scheme
-      window.location.href = scheme;
-    });
+    // Buat link tak terlihat dan klik — tidak navigasi halaman
+    const link = document.createElement('a');
+    link.href = scheme;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    setTimeout(() => document.body.removeChild(link), 100);
+
+    // Jika 2.5s tidak ada visibilitychange → app tidak ada
+    const timer = setTimeout(() => cleanup(false), 2500);
   };
 
-  // Check Free Fire first
-  const hasFF = await checkApp('freefire://');
+  // Cek FF biasa dulu
+  checkApp('freefire://', (hasFF) => {
+    if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
+    if (ffStatus) {
+      ffStatus.textContent = hasFF ? 'DETECTED' : 'NOT DETECTED';
+      ffStatus.className = hasFF ? 'status-btn installed' : 'status-btn not-installed';
+    }
 
-  // Small delay between checks
-  await new Promise(r => setTimeout(r, 500));
-
-  // Check Free Fire MAX
-  const hasFFMax = await checkApp('freefiremax://');
-
-  // Update UI based on results
-  if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
-  if (indFFMax) indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
-
-  if (ffStatus) {
-    ffStatus.textContent = hasFF ? 'DETECTED' : 'NOT DETECTED';
-    ffStatus.className = hasFF ? 'status-btn installed' : 'status-btn not-installed';
-  }
-  if (ffMaxStatus) {
-    ffMaxStatus.textContent = hasFFMax ? 'DETECTED' : 'NOT DETECTED';
-    ffMaxStatus.className = hasFFMax ? 'status-btn installed' : 'status-btn not-installed';
-  }
-
-  showNotification('Scan completed');
+    // Setelah FF selesai, cek FF MAX
+    setTimeout(() => {
+      checkApp('freefiremax://', (hasFFMax) => {
+        if (indFFMax) indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
+        if (ffMaxStatus) {
+          ffMaxStatus.textContent = hasFFMax ? 'DETECTED' : 'NOT DETECTED';
+          ffMaxStatus.className = hasFFMax ? 'status-btn installed' : 'status-btn not-installed';
+        }
+        showNotification('Scan selesai');
+      });
+    }, 500);
+  });
 }
 
 // Tampilkan notifikasi
