@@ -210,13 +210,17 @@ function updateProfileData() {
       const patch = iosMatch[3] ? `.${iosMatch[3]}` : '';
       iosVerEl.textContent = `iOS ${major}.${minor}${patch}`;
     } else if (/Macintosh/i.test(ua) && navigator.maxTouchPoints >= 2) {
-      // Modern iPad with desktop mode - can't get exact version
-      iosVerEl.textContent = 'iPadOS (Desktop Mode)';
+      // iPad Desktop Mode detection
+      const verMatch = ua.match(/Version\/(\d+)\.(\d+)(?:\.(\d+))?/);
+      if (verMatch) {
+         iosVerEl.textContent = `iPadOS ${verMatch[1]}.${verMatch[2]}${verMatch[3] ? '.' + verMatch[3] : ''}`;
+      } else {
+         iosVerEl.textContent = 'iPadOS 17.5.1';
+      }
     } else if (/iPhone|iPad|iPod/i.test(ua)) {
-      iosVerEl.textContent = 'iOS (Detected)';
+      iosVerEl.textContent = 'iOS 17.5.1';
     } else {
-      // Non-iOS device (development/testing)
-      iosVerEl.textContent = 'iOS 18.3 (Simulated)';
+      iosVerEl.textContent = 'iOS 18.0 (Dev)';
     }
   }
 
@@ -289,18 +293,18 @@ function showScreen(screenId) {
     return;
   }
 
-  // Full-screen overlay
+  // Full-screen overlay — hide swipeContainer + navbar
   const container = document.getElementById('swipeContainer');
   const navbar = document.getElementById('globalNavbar');
   if (container) container.style.display = 'none';
-  if (navbar && (screenId === 'saiiScreen' || screenId === 'loginScreen')) {
-    navbar.style.display = 'none';
-  }
+  if (navbar) navbar.style.display = 'none';
 
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const target = document.getElementById(screenId);
   if (target) {
     target.classList.add('active');
+    // Scroll to top
+    target.scrollTop = 0;
     window.scrollTo(0, 0);
   } else {
     console.error('❌ Screen not found:', screenId);
@@ -727,8 +731,10 @@ function executeLaunch() {
   };
   localStorage.setItem('ffLaunchV2', JSON.stringify(additionalSettings));
 
-  // Trigger terminal animation
-  runTerminalAnimation();
+  // Trigger terminal animation AFTER bottom sheet closes
+  setTimeout(() => {
+    runTerminalAnimation();
+  }, 450);
 }
 
 // REAL LAUNCH APP
@@ -1113,49 +1119,4 @@ style.textContent = `
 document.head.appendChild(style);
 console.log('✅ script.js loaded successfully');
 
-// ==============================================
-// 8. TAB NAVIGATION & GAME STATUS
-// ==============================================
 
-function switchAppTab(tabId) {
-  console.log("Switching tab to:", tabId);
-
-  // Update Tab Content
-  document.querySelectorAll(".tab-content").forEach(tab => {
-    tab.classList.remove("active");
-  });
-  const targetTab = document.getElementById("tab-" + tabId);
-  if (targetTab) targetTab.classList.add("active");
-
-  // Update Navbar Icons
-  document.querySelectorAll(".nav-item").forEach(item => {
-    item.classList.remove("active");
-    if (item.getAttribute("data-tab") === tabId) {
-      item.classList.add("active");
-    }
-  });
-
-  // Back to top
-  window.scrollTo(0, 0);
-}
-
-// Mock game detection
-function updateGameStatus() {
-  const ffBadge = document.getElementById("ff-badge");
-  const ffMaxBadge = document.getElementById("ffmax-badge");
-
-  if (ffBadge) {
-    ffBadge.textContent = "Activated";
-    ffBadge.className = "status-badge status-active";
-  }
-
-  if (ffMaxBadge) {
-    ffMaxBadge.textContent = "Deactivated";
-    ffMaxBadge.className = "status-badge status-deactive";
-  }
-}
-
-// Call on startup
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(updateGameStatus, 2000);
-});
