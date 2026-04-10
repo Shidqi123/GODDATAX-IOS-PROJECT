@@ -179,9 +179,9 @@
             <div class="game-name-info">
               <h3>Free Fire</h3>
               <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefireth</p>
-              <div id="ff-status-ui" class="status-btn" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">CHECKING...</div>
+              <div id="ff-status-ui" class="status-btn not-installed" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">NOT SCANNED</div>
             </div>
-            <div id="indicator-ff" class="game-status-indicator online"></div>
+            <div id="indicator-ff" class="game-status-indicator offline"></div>
           </div>
           <div class="game-horizontal-card" onclick="openLaunchSheet('ffmax')">
             <div class="game-icon-square">
@@ -190,15 +190,19 @@
             <div class="game-name-info">
               <h3>Free Fire MAX</h3>
                <p style="font-size: 11px; color: #8a8a8e;">com.dts.freefiremax</p>
-               <div id="ffmax-status-ui" class="status-btn" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">CHECKING...</div>
+               <div id="ffmax-status-ui" class="status-btn not-installed" style="margin-top: 5px; display: inline-block; padding: 2px 8px;">NOT SCANNED</div>
             </div>
             <div id="indicator-ffmax" class="game-status-indicator offline"></div>
           </div>
         </div>
 
-
-
-
+        <!-- Scan Button -->
+        <div style="margin-top: 20px; text-align: center;">
+          <button class="rescan-btn-minimal" onclick="detectGames()" id="scanAppsBtn">
+            <i class="fas fa-radar"></i> SCAN APPS
+          </button>
+          <p style="font-size: 11px; color: #555; margin-top: 10px;">Tap to detect installed games</p>
+        </div>
 
       </div>
     </div>
