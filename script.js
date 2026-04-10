@@ -180,6 +180,11 @@ function navTo(index, animate = true) {
 
   // Animate the sliding pill indicator
   updateSliderPill(index);
+
+  // Trigger game detection if going to Status tab
+  if (index === 2) {
+    detectGames();
+  }
 }
 
 // Helper function to update Profile data
@@ -394,7 +399,18 @@ async function detectGames() {
   const hasFF = await checkApp('freefire://');
   const hasFFMax = await checkApp('freefiremax://');
 
+  const indFF = document.getElementById('indicator-ff');
+  const indFFMax = document.getElementById('indicator-ffmax');
+
   setTimeout(() => {
+    // Update Indicators
+    if (indFF) {
+      indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
+    }
+    if (indFFMax) {
+      indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
+    }
+
     if (ffStatus) {
       if (hasFF) {
         ffStatus.textContent = 'DETECTED';
@@ -613,6 +629,11 @@ function runTerminalAnimation() {
   if (progressPercent) progressPercent.textContent = '0%';
   if (progressLabel) progressLabel.textContent = 'Initializing...';
   
+  const termTarget = document.getElementById('terminal-target');
+  if (termTarget) termTarget.textContent = selectedAppToLaunch === 'ff' ? 'freefire' : 'freefiremax';
+  
+  const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
+  
   // Clear semua text elements terlebih dahulu
   document.getElementById('text2').textContent = '';
   document.getElementById('text3').textContent = '';
@@ -676,10 +697,10 @@ function runTerminalAnimation() {
     
     const text3 = document.getElementById('text3');
     if (text3) {
-      text3.textContent = 'Preparing Free Fire environment...';
+      text3.textContent = `Preparing ${appLabel} environment...`;
     }
     
-    updateDynamicIsland('Preparing environment...', 'loading', 2000);
+    updateDynamicIsland(`Preparing ${appLabel}...`, 'loading', 2000);
     
     if (progressBar) progressBar.style.width = '50%';
     if (progressPercent) progressPercent.textContent = '50%';
@@ -716,7 +737,7 @@ function runTerminalAnimation() {
     
     const text5 = document.getElementById('text5');
     if (text5) {
-      text5.textContent = 'Launching Free Fire with optimizations...';
+      text5.textContent = `Launching ${appLabel} with optimizations...`;
     }
     
     updateDynamicIsland('Finalizing Launch...', 'success', 4000);
@@ -791,41 +812,50 @@ function launchFreeFire() {
   localStorage.setItem('ffSettings', JSON.stringify(settings));
   
   // ✅ REAL LAUNCH CODE - Mencoba berbagai skema URL untuk membuka Free Fire
-  const freeFireSchemes = [
-    'freefire://',                    // Skema utama Free Fire
-    'freefiremax://',                // Free Fire MAX
-    'com.dts.freefireth://',         // Package name untuk Android
-    'https://freefiremobile.com/',   // Website resmi
-    'https://play.google.com/store/apps/details?id=com.dts.freefireth', // Play Store
-    'https://apps.apple.com/app/free-fire/id1300096749' // App Store
+  const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
+  const targetScheme = selectedAppToLaunch === 'ff' ? 'freefire://' : 'freefiremax://';
+  
+  // Combine all schemes, putting target scheme first
+  const allSchemes = [
+    targetScheme,
+    'freefire://',
+    'freefiremax://',
+    'com.dts.freefireth://',
+    'com.dts.freefiremax://'
   ];
   
-  console.log('🎮 Attempting to launch Free Fire...');
+  // Add universal fallbacks
+  allSchemes.push(
+    'https://freefiremobile.com/',
+    selectedAppToLaunch === 'ff' 
+      ? 'https://apps.apple.com/app/free-fire/id1300096749' 
+      : 'https://apps.apple.com/app/free-fire-max/id1543443745'
+  );
+
+  console.log(`🎮 Attempting to launch ${appLabel}...`);
   
   let launchSuccess = false;
   
   // Coba setiap skema sampai berhasil
-  for (const scheme of freeFireSchemes) {
+  for (const scheme of allSchemes) {
     try {
       console.log(`Trying scheme: ${scheme}`);
       
       if (scheme.startsWith('http')) {
-        // Untuk link web, buka di tab baru
         window.open(scheme, '_blank');
         launchSuccess = true;
         break;
       } else {
-        // Untuk deep links, coba location.href
         window.location.href = scheme;
-        // Beri waktu untuk proses redirect
+        launchSuccess = true; // Hard to detect failure, so we assume success for the loop
         setTimeout(() => {
-          launchSuccess = true;
-        }, 100);
+           // If we're still here after a while, maybe it failed, but we can't easily know
+        }, 500);
         break;
       }
     } catch (error) {
-      console.log(`Failed with scheme ${scheme}:`, error);
-      continue;
+       console.log(`Failed with scheme ${scheme}:`, error);
+       continue;
     }
   }
   
@@ -875,6 +905,9 @@ function openLaunchSheet(appType) {
     name.textContent = 'Free Fire MAX';
     pkg.textContent = 'com.dts.freefiremax';
   }
+  
+  const btnText = document.getElementById('sheetBtnText');
+  if (btnText) btnText.textContent = appType === 'ff' ? 'LOGIN FREE FIRE' : 'LOGIN FREE FIRE MAX';
   
   overlay.style.display = 'flex';
   
