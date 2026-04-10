@@ -831,14 +831,8 @@ function launchFreeFire() {
   setTimeout(() => {
     if (!launchSuccess) {
       console.log('❌ All direct schemes failed, showing fallback message');
-      showNotification('Free Fire app not found! Please install Free Fire from your app store.');
-
-      // Tampilkan instruksi untuk pengguna iOS
-      if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-        showNotification('For iOS: Open App Store and install Free Fire');
-      } else {
-        showNotification('For Android: Open Google Play Store and install Free Fire');
-      }
+      const missingApp = selectedAppToLaunch === 'ff' ? 'FreeFiree' : 'FreeFiree Max';
+      showNotification(`Anda Tidak Menginstall ${missingApp}`);
     } else {
       console.log('✅ Free Fire launch initiated');
     }
