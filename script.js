@@ -160,6 +160,7 @@ let swipeStartY = 0;
 let isSwiping = false;
 let isDragging = false;
 let dragOffset = 0;
+let isTerminalActive = false; // Flag to prevent terminal from closing unexpectedly
 
 // Navigate to a tab index (0-3) with smooth swipe
 function navTo(index, animate = true) {
@@ -272,8 +273,10 @@ function showSwiper() {
     updateProfileData();
   }, 50);
 
-  // Hide all .screen overlays
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  // Hide all .screen overlays (UNLESS terminal is active)
+  if (!isTerminalActive) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  }
 
   // Re-init slider pill position
   setTimeout(() => updateSliderPill(currentTab), 30);
@@ -299,7 +302,9 @@ function showScreen(screenId) {
   if (container) container.style.display = 'none';
   if (navbar) navbar.style.display = 'none';
 
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  if (!isTerminalActive || screenId === 'mainScreen') {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  }
   const target = document.getElementById(screenId);
   if (target) {
     target.classList.add('active');
@@ -583,6 +588,7 @@ function runTerminalAnimation() {
     return;
   }
 
+  isTerminalActive = true;
   showScreen('saiiScreen');
 
   const progressBar = document.getElementById('progressBar');
@@ -847,6 +853,7 @@ function launchFreeFire() {
 
     // Kembali ke main screen setelah beberapa detik
     setTimeout(() => {
+      isTerminalActive = false; // Allow closing terminal now
       showScreen('mainScreen');
       showNotification('Free Fire launch process completed');
     }, 2000);
