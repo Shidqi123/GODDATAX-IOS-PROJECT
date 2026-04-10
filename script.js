@@ -651,8 +651,6 @@ function runTerminalAnimation() {
       text2.textContent = 'Checking system integrity...';
     }
 
-    updateDynamicIsland('System integrity check...', 'loading', 2000);
-
     if (progressBar) progressBar.style.width = '20%';
     if (progressPercent) progressPercent.textContent = '20%';
     if (progressLabel) progressLabel.textContent = 'System check...';
@@ -670,8 +668,6 @@ function runTerminalAnimation() {
     if (text3) {
       text3.textContent = `Preparing ${appLabel} environment...`;
     }
-
-    updateDynamicIsland(`Preparing ${appLabel}...`, 'loading', 2000);
 
     if (progressBar) progressBar.style.width = '50%';
     if (progressPercent) progressPercent.textContent = '50%';
@@ -691,8 +687,6 @@ function runTerminalAnimation() {
       text4.textContent = 'Bypassing security protocols...';
     }
 
-    updateDynamicIsland('Bypassing protocols...', 'loading', 2000);
-
     if (progressBar) progressBar.style.width = '75%';
     if (progressPercent) progressPercent.textContent = '75%';
     if (progressLabel) progressLabel.textContent = 'Security bypass...';
@@ -710,8 +704,6 @@ function runTerminalAnimation() {
     if (text5) {
       text5.textContent = `Launching ${appLabel} with optimizations...`;
     }
-
-    updateDynamicIsland('Finalizing Launch...', 'success', 4000);
 
     if (progressBar) progressBar.style.width = '100%';
     if (progressPercent) progressPercent.textContent = '100%';
