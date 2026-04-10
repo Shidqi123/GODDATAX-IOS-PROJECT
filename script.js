@@ -205,17 +205,23 @@ function updateProfileData() {
 
   if (iosVerEl) {
     const ua = navigator.userAgent;
-    const iosMatch = ua.match(/(?:iPhone|iPad|iPod).*?OS (\d+)_(\d+)(?:_(\d+))?/);
+    
+    // Primary: Match iOS/iPadOS version from UA string
+    const iosMatch = ua.match(/(?:iPhone|iPad|iPod).*?OS (\d+)[_\.](\d+)(?:[_\.](\d+))?/);
     
     if (iosMatch) {
-      iosVerEl.textContent = `iOS ${iosMatch[1]}.${iosMatch[2]}` + (iosMatch[3] ? `.${iosMatch[3]}` : '');
-    } else if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 0) {
-      // Modern iPad with Desktop Mode
-      iosVerEl.textContent = 'iPadOS Detected';
-    } else if (/iPhone|iPad|iPod/.test(ua)) {
-      iosVerEl.textContent = 'iOS Detected';
+      const major = iosMatch[1];
+      const minor = iosMatch[2];
+      const patch = iosMatch[3] ? `.${iosMatch[3]}` : '';
+      iosVerEl.textContent = `iOS ${major}.${minor}${patch}`;
+    } else if (/Macintosh/i.test(ua) && navigator.maxTouchPoints >= 2) {
+      // Modern iPad with desktop mode - can't get exact version
+      iosVerEl.textContent = 'iPadOS (Desktop Mode)';
+    } else if (/iPhone|iPad|iPod/i.test(ua)) {
+      iosVerEl.textContent = 'iOS (Detected)';
     } else {
-      iosVerEl.textContent = 'iOS 18.2 (Simulated)';
+      // Non-iOS device (development/testing)
+      iosVerEl.textContent = 'iOS 18.3 (Simulated)';
     }
   }
 
@@ -373,75 +379,80 @@ function initSwipeGestures() {
 async function detectGames() {
   const ffStatus = document.getElementById('ff-status-ui');
   const ffMaxStatus = document.getElementById('ffmax-status-ui');
-  
-  showNotification('Scanning installed apps...');
-  
-  if (ffStatus) {
-    ffStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING';
-    ffStatus.className = 'status-btn';
-  }
-  
-  if (ffMaxStatus) {
-    ffMaxStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING';
-    ffMaxStatus.className = 'status-btn';
-  }
-
-  // Logic: Mencoba membuka skema URL game
-  // Jika dialihkan dari browser selama beberapa ms, berarti game ada
-  const checkApp = (url) => {
-    return new Promise((resolve) => {
-      const start = Date.now();
-      const iframe = document.createElement('iframe');
-      iframe.style.display = 'none';
-      iframe.src = url;
-      document.body.appendChild(iframe);
-      
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-        // Jika selisih waktu > 2s, kemungkinan browser memunculkan popup "Open in app" (Artinya App ada)
-        // Di Web, deteksi murni sulit, jadi kita pakai simulasi deteksi cerdas
-        resolve(Math.random() > 0.3); // Simulasi: 70% Terdeteksi jika skema valid
-      }, 1500);
-    });
-  };
-
-  const hasFF = await checkApp('freefire://');
-  const hasFFMax = await checkApp('freefiremax://');
-
   const indFF = document.getElementById('indicator-ff');
   const indFFMax = document.getElementById('indicator-ffmax');
 
-  setTimeout(() => {
-    // Update Indicators
-    if (indFF) {
-      indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
-    }
-    if (indFFMax) {
-      indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
-    }
+  showNotification('Scanning installed apps...');
 
-    if (ffStatus) {
-      if (hasFF) {
-        ffStatus.textContent = 'DETECTED';
-        ffStatus.className = 'status-btn installed';
-      } else {
-        ffStatus.textContent = 'NOT DETECTED';
-        ffStatus.className = 'status-btn not-installed';
-      }
-    }
+  // Set both to CHECKING/loading state
+  const setChecking = (el, ind) => {
+    if (el) { el.innerHTML = '<i class="fas fa-spinner fa-spin"></i> CHECKING'; el.className = 'status-btn'; }
+    if (ind) ind.className = 'game-status-indicator offline';
+  };
+  setChecking(ffStatus, indFF);
+  setChecking(ffMaxStatus, indFFMax);
 
-    if (ffMaxStatus) {
-      if (hasFFMax) {
-        ffMaxStatus.textContent = 'DETECTED';
-        ffMaxStatus.className = 'status-btn installed';
-      } else {
-        ffMaxStatus.textContent = 'NOT DETECTED';
-        ffMaxStatus.className = 'status-btn not-installed';
-      }
-    }
-    
-    showNotification('System Scan Completed');
-  }, 1000);
+  /**
+   * iOS App Detection via URL Scheme + Page Visibility
+   * - Redirect to custom scheme (e.g., freefire://)
+   * - If app is installed, iOS will open it and this page goes to background (hidden)
+   * - We detect that with visibilitychange event
+   * - If no visibility change within ~2s, app is NOT installed
+   */
+  const checkApp = (scheme) => {
+    return new Promise((resolve) => {
+      let appOpened = false;
+      
+      // Listen for page losing visibility = app was opened
+      const onHide = () => {
+        if (document.hidden) {
+          appOpened = true;
+          cleanup();
+          resolve(true);
+        }
+      };
+
+      const cleanup = () => {
+        document.removeEventListener('visibilitychange', onHide);
+        clearTimeout(timer);
+      };
+
+      document.addEventListener('visibilitychange', onHide);
+
+      // If no visibility change within 2.5s, app not installed
+      const timer = setTimeout(() => {
+        cleanup();
+        resolve(false);
+      }, 2500);
+
+      // Try to open the custom URL scheme
+      window.location.href = scheme;
+    });
+  };
+
+  // Check Free Fire first
+  const hasFF = await checkApp('freefire://');
+
+  // Small delay between checks
+  await new Promise(r => setTimeout(r, 500));
+
+  // Check Free Fire MAX
+  const hasFFMax = await checkApp('freefiremax://');
+
+  // Update UI based on results
+  if (indFF) indFF.className = hasFF ? 'game-status-indicator online' : 'game-status-indicator offline';
+  if (indFFMax) indFFMax.className = hasFFMax ? 'game-status-indicator online' : 'game-status-indicator offline';
+
+  if (ffStatus) {
+    ffStatus.textContent = hasFF ? 'DETECTED' : 'NOT DETECTED';
+    ffStatus.className = hasFF ? 'status-btn installed' : 'status-btn not-installed';
+  }
+  if (ffMaxStatus) {
+    ffMaxStatus.textContent = hasFFMax ? 'DETECTED' : 'NOT DETECTED';
+    ffMaxStatus.className = hasFFMax ? 'status-btn installed' : 'status-btn not-installed';
+  }
+
+  showNotification('Scan completed');
 }
 
 // Tampilkan notifikasi
