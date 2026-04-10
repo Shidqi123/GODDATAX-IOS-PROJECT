@@ -799,51 +799,44 @@ function launchFreeFire() {
 
   console.log(`🎮 Attempting to launch ${appLabel}...`);
 
-  let launchSuccess = false;
+  // We only attempt the MOST likely scheme to avoid multiple Safari popups
+  const scheme = selectedAppToLaunch === 'ff' ? 'freefire://' : 'freefiremax://';
+  
+  // Set success flag based on blur (standard technique for scheme detection)
+  let blurDetected = false;
+  window.onblur = () => { blurDetected = true; };
 
-  // Coba setiap skema sampai berhasil
-  for (const scheme of allSchemes) {
-    try {
-      console.log(`Trying scheme: ${scheme}`);
+  // Attempt the launch
+  window.location.href = scheme;
 
-      if (scheme.startsWith('http')) {
-        window.open(scheme, '_blank');
-        launchSuccess = true;
-        break;
-      } else {
-        // Simpan status instalasi ke localStorage saat berhasil launch
-        if (selectedAppToLaunch === 'ff') {
-          localStorage.setItem('ff_installed', 'true');
-        } else {
-          localStorage.setItem('ffmax_installed', 'true');
-        }
-        window.location.href = scheme;
-        launchSuccess = true;
-        break;
-      }
-    } catch (error) {
-      console.log(`Failed with scheme ${scheme}:`, error);
-      continue;
-    }
-  }
-
-  // Fallback jika semua skema gagal
+  // Wait to see if it actually opened
   setTimeout(() => {
-    if (!launchSuccess) {
-      console.log('❌ All direct schemes failed, showing fallback message');
+    if (!blurDetected) {
+      console.log('❌ App launch failed or not installed');
       const missingApp = selectedAppToLaunch === 'ff' ? 'FreeFiree' : 'FreeFiree Max';
       showNotification(`Anda Tidak Menginstall ${missingApp}`);
+      
+      // Update our internal detection to RED if it failed
+      if (selectedAppToLaunch === 'ff') localStorage.removeItem('ff_installed');
+      else localStorage.removeItem('ffmax_installed');
+      detectGames(); // Refresh UI
     } else {
-      console.log('✅ Free Fire launch initiated');
+      console.log('✅ App launch successful');
+      if (selectedAppToLaunch === 'ff') localStorage.setItem('ff_installed', 'true');
+      else localStorage.setItem('ffmax_installed', 'true');
+      detectGames(); // Refresh UI
     }
-
-    // Kembali ke main screen setelah beberapa detik
+    
+    // Cleanup callback
+    window.onblur = null;
+    
+    // Return to main screen
     setTimeout(() => {
-      isTerminalActive = false; // Allow closing terminal now
+      isTerminalActive = false;
       showScreen('mainScreen');
-      showNotification('Free Fire launch process completed');
-    }, 2000);
-  }, 1500);
+    }, 1500);
+  }, 2000);
+}
 }
 
 // ==============================================
