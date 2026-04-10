@@ -221,7 +221,7 @@ function updateProfileData() {
     } else if (/iPhone|iPad|iPod/i.test(ua)) {
       iosVerEl.textContent = 'iOS 17.5.1';
     } else {
-      iosVerEl.textContent = 'iOS 18.0 (Dev)';
+      iosVerEl.textContent = 'iOS 15 - 26.4';
     }
   }
 
