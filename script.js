@@ -379,8 +379,14 @@ function initSwipeGestures() {
 
 
 
-// Deteksi Aplikasi berdasarkan riwayat launch (tersimpan di localStorage)
-function detectGames() {
+// Deteksi Aplikasi - Sekarang lebih manual & akurat
+function detectGames(isManual = false) {
+  if (isManual) {
+    localStorage.removeItem('ff_installed');
+    localStorage.removeItem('ffmax_installed');
+    showNotification('Status reset. Silakan coba buka salah satu game.');
+  }
+
   const ffStatus = document.getElementById('ff-status-ui');
   const ffMaxStatus = document.getElementById('ffmax-status-ui');
   const indFF = document.getElementById('indicator-ff');
@@ -809,6 +815,7 @@ async function launchFreeFire() {
     
     if (blurDetected) {
       console.log('✅ App launch likely successful');
+      // Kita set ke true hanya jika user memang berhasil keluar dari browser
       if (selectedAppToLaunch === 'ff') localStorage.setItem('ff_installed', 'true');
       else localStorage.setItem('ffmax_installed', 'true');
       detectGames(); 
