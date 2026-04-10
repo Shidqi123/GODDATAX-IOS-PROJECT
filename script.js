@@ -1105,4 +1105,11 @@ style.textContent = `
 document.head.appendChild(style);
 console.log('✅ script.js loaded successfully');
 
-
+// ==============================================
+// 8. APP INITIALIZATION
+// ==============================================
+document.addEventListener('DOMContentLoaded', () => {
+  checkSession();
+  detectGames();
+  initSwipeGestures();
+});
