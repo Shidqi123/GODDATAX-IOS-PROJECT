@@ -198,7 +198,7 @@ function updateProfileData() {
 
   if (iosVerEl) {
     const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua) && !window.MSStream) {
+    if (/iPad|iPhone|iPod/.test(ua)) {
       const match = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
       if (match) {
         iosVerEl.textContent = `iOS ${match[1]}.${match[2]}` + (match[3] ? `.${match[3]}` : '');
@@ -206,12 +206,13 @@ function updateProfileData() {
         iosVerEl.textContent = 'iOS Detected';
       }
     } else {
+      // Fallback for desktop or non-iOS
       iosVerEl.textContent = 'iOS 18.2 (Simulated)';
     }
   }
 
   // Set default expiry if not found in specific DB logic
-  if (expiryEl) expiryEl.textContent = 'Lifetime Access';
+  if (expiryEl) expiryEl.textContent = 'OB53 - OB54';
 }
 
 // Moves the red sliding pill background to the active nav item
