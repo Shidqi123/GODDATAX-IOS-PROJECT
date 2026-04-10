@@ -802,6 +802,8 @@ async function launchFreeFire() {
       if (selectedAppToLaunch === 'ff') localStorage.removeItem('ff_installed');
       else localStorage.removeItem('ffmax_installed');
       detectGames(); 
+    }
+    
     // Cleanup callback
     window.onblur = null;
     
