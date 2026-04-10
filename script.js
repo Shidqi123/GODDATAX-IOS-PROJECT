@@ -776,27 +776,10 @@ function launchFreeFire() {
   };
   localStorage.setItem('ffSettings', JSON.stringify(settings));
 
-  // ✅ REAL LAUNCH CODE - Mencoba berbagai skema URL untuk membuka Free Fire
+// ✅ REAL LAUNCH CODE - Mencoba berbagai skema URL untuk membuka Free Fire
+async function launchFreeFire() {
   const appLabel = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire MAX';
-  const targetScheme = selectedAppToLaunch === 'ff' ? 'freefire://' : 'freefiremax://';
-
-  // Combine all schemes, putting target scheme first
-  const allSchemes = [
-    targetScheme,
-    'freefire://',
-    'freefiremax://',
-    'com.dts.freefireth://',
-    'com.dts.freefiremax://'
-  ];
-
-  // Add universal fallbacks
-  allSchemes.push(
-    'https://freefiremobile.com/',
-    selectedAppToLaunch === 'ff'
-      ? 'https://apps.apple.com/app/free-fire/id1300096749'
-      : 'https://apps.apple.com/app/free-fire-max/id1543443745'
-  );
-
+  
   console.log(`🎮 Attempting to launch ${appLabel}...`);
 
   // We only attempt the MOST likely scheme to avoid multiple Safari popups
@@ -836,7 +819,6 @@ function launchFreeFire() {
       showScreen('mainScreen');
     }, 1500);
   }, 2000);
-}
 }
 
 // ==============================================
