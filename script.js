@@ -205,15 +205,16 @@ function updateProfileData() {
 
   if (iosVerEl) {
     const ua = navigator.userAgent;
-    if (/iPad|iPhone|iPod/.test(ua)) {
-      const match = ua.match(/OS (\d+)_(\d+)_?(\d+)?/);
-      if (match) {
-        iosVerEl.textContent = `iOS ${match[1]}.${match[2]}` + (match[3] ? `.${match[3]}` : '');
-      } else {
-        iosVerEl.textContent = 'iOS Detected';
-      }
+    const iosMatch = ua.match(/(?:iPhone|iPad|iPod).*?OS (\d+)_(\d+)(?:_(\d+))?/);
+    
+    if (iosMatch) {
+      iosVerEl.textContent = `iOS ${iosMatch[1]}.${iosMatch[2]}` + (iosMatch[3] ? `.${iosMatch[3]}` : '');
+    } else if (/Macintosh/.test(ua) && navigator.maxTouchPoints > 0) {
+      // Modern iPad with Desktop Mode
+      iosVerEl.textContent = 'iPadOS Detected';
+    } else if (/iPhone|iPad|iPod/.test(ua)) {
+      iosVerEl.textContent = 'iOS Detected';
     } else {
-      // Fallback for desktop or non-iOS
       iosVerEl.textContent = 'iOS 18.2 (Simulated)';
     }
   }
