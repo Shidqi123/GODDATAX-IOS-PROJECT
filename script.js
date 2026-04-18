@@ -558,35 +558,9 @@ function startHeartbeat(licenseKey) {
     if (!licenseKey) return;
 
     try {
-      // 1. 🔥 REAL-TIME MAINTENANCE CHECK 🔥
-      const { data: statusData } = await _supabase
-        .from('app_status')
-        .select('value')
-        .eq('name', 'is_updating')
-        .single();
-      
-      const isSwipeMode = document.getElementById('swipeContainer').style.display === 'block';
-      const activeScreen = document.querySelector('.screen.active');
+      // Pengecekan maintenance global sekarang sudah dihandle oleh Realtime Subscriptions
+      // Jadi di sini kita fokus ke monitoring lisensi user saja
 
-      if (statusData && statusData.value === 'true') {
-        // Jika admin menyalakan maintenance, langsung kunci layar
-        if (isSwipeMode || (activeScreen && activeScreen.id !== 'maintenanceScreen')) {
-          console.log('🚧 Maintenance triggered remotely!');
-          if (isSwipeMode) {
-            document.getElementById('swipeContainer').style.display = 'none';
-            if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
-          }
-          showScreen('maintenanceScreen');
-        }
-        return; // Jangan lanjut cek lisensi jika sedang maintenance
-      } else {
-        // Jika maintenance dimatikan dan user sedang di layar maintenance, balikkan ke menu
-        if (activeScreen && activeScreen.id === 'maintenanceScreen') {
-          showSwiper();
-        }
-      }
-
-      // 2. Monitoring Status Lisensi & HWID (seperti biasa)
       const { data, error } = await _supabase
         .from(APP_CONFIG.supabase.tableName)
         .select('status, hwid')
@@ -600,6 +574,9 @@ function startHeartbeat(licenseKey) {
         }
         return;
       }
+
+      const isSwipeMode = document.getElementById('swipeContainer').style.display === 'block';
+      const activeScreen = document.querySelector('.screen.active');
 
       if (data.status === 'paused') {
         if ((isSwipeMode) || (activeScreen && activeScreen.id !== 'pausedScreen')) {
@@ -631,6 +608,45 @@ function startHeartbeat(licenseKey) {
       console.error('Heartbeat check failed:', err);
     }
   }, 7000); // Check setiap 7 detik
+}
+
+// 2.2 REAL-TIME MAINTENANCE SYSTEM (INSTANT UPDATE)
+function initRealtimeMaintenance() {
+  if (!_supabase) return;
+
+  console.log('🚀 Initializing Realtime Maintenance Listener...');
+  
+  _supabase
+    .channel('app_status_changes')
+    .on('postgres_changes', { 
+      event: 'UPDATE', 
+      schema: 'public', 
+      table: 'app_status',
+      filter: 'name=eq.is_updating'
+    }, payload => {
+      const isUpdating = payload.new.value === 'true';
+      console.log('⚡ REALTIME MAINTENANCE CHANGE:', isUpdating);
+      
+      const activeScreen = document.querySelector('.screen.active');
+      
+      if (isUpdating) {
+        // Instant Lock
+        document.getElementById('swipeContainer').style.display = 'none';
+        if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
+        showScreen('maintenanceScreen');
+        showNotification('System update in progress...');
+      } else {
+        // Instant Unlock
+        if (activeScreen && activeScreen.id === 'maintenanceScreen') {
+          if (localStorage.getItem('_g_sess')) {
+            showSwiper();
+          } else {
+            showScreen('loginScreen');
+          }
+        }
+      }
+    })
+    .subscribe();
 }
 
 // Clear session (logout)
@@ -972,6 +988,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   // 1. Init Base Systems
   initSwipeGestures();
   detectGames();
+  initRealtimeMaintenance(); // Jalankan listener realtime maintenance
 
   // 2. 🔥 MAINTENANCE / UPDATE CHECK 🔥
   let isUpdating = APP_CONFIG.isUpdating;
