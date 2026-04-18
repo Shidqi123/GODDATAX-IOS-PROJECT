@@ -558,6 +558,35 @@ function startHeartbeat(licenseKey) {
     if (!licenseKey) return;
 
     try {
+      // 1. 🔥 REAL-TIME MAINTENANCE CHECK 🔥
+      const { data: statusData } = await _supabase
+        .from('app_status')
+        .select('value')
+        .eq('name', 'is_updating')
+        .single();
+      
+      const isSwipeMode = document.getElementById('swipeContainer').style.display === 'block';
+      const activeScreen = document.querySelector('.screen.active');
+
+      if (statusData && statusData.value === 'true') {
+        // Jika admin menyalakan maintenance, langsung kunci layar
+        if (isSwipeMode || (activeScreen && activeScreen.id !== 'maintenanceScreen')) {
+          console.log('🚧 Maintenance triggered remotely!');
+          if (isSwipeMode) {
+            document.getElementById('swipeContainer').style.display = 'none';
+            if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
+          }
+          showScreen('maintenanceScreen');
+        }
+        return; // Jangan lanjut cek lisensi jika sedang maintenance
+      } else {
+        // Jika maintenance dimatikan dan user sedang di layar maintenance, balikkan ke menu
+        if (activeScreen && activeScreen.id === 'maintenanceScreen') {
+          showSwiper();
+        }
+      }
+
+      // 2. Monitoring Status Lisensi & HWID (seperti biasa)
       const { data, error } = await _supabase
         .from(APP_CONFIG.supabase.tableName)
         .select('status, hwid')
@@ -565,22 +594,15 @@ function startHeartbeat(licenseKey) {
         .single();
 
       if (error) {
-        // HANYA jika lisensi benar-benar tidak ditemukan di database (PGRST116)
         if (error.code === 'PGRST116') {
-          console.log('License deleted, logging out...');
           clearInterval(heartbeatInterval);
           clearSession();
         }
-        return; // Jika error koneksi internet, biarkan saja (jangan logout)
+        return;
       }
-
-      // Check Real-time Status Switching
-      const activeScreen = document.querySelector('.screen.active');
-      const isSwipeMode = document.getElementById('swipeContainer').style.display === 'block';
 
       if (data.status === 'paused') {
         if ((isSwipeMode) || (activeScreen && activeScreen.id !== 'pausedScreen')) {
-          // Jika sedang di swipe mode, sembunyikan swiper dulu
           if (isSwipeMode) {
             document.getElementById('swipeContainer').style.display = 'none';
             if (document.getElementById('globalNavbar')) document.getElementById('globalNavbar').style.display = 'none';
@@ -589,16 +611,10 @@ function startHeartbeat(licenseKey) {
         }
       } else if (data.status === 'active') {
         if (activeScreen && activeScreen.id === 'pausedScreen') {
-          // Jika kembali aktif, kembalikan ke swiper jika sebelumnya di sana
-          if (localStorage.getItem('saiSession')) {
-            showSwiper();
-          } else {
-            showScreen('mainScreen');
-          }
+          showSwiper();
         }
       }
 
-      // Check HWID Security (Only if HWID is already linked)
       const currentHWID = getHWID();
       if (data.hwid && data.hwid !== currentHWID) {
         clearInterval(heartbeatInterval);
@@ -606,7 +622,6 @@ function startHeartbeat(licenseKey) {
         showNotification('Keamanan: Lisensi digunakan di HP lain');
       }
 
-      // Update Heartbeat / Last Seen
       await _supabase
         .from(APP_CONFIG.supabase.tableName)
         .update({ is_online: true, last_seen: new Date().toISOString() })
