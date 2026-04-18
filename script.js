@@ -1,3 +1,49 @@
+// ==============================================
+// 0. SECURITY & ANTI-CRACK SYSTEM
+// ==============================================
+(function() {
+    // 1. Anti-Debugger (Infinite loop if devtools is open)
+    const checkDebugger = function() {
+        function d(i) {
+            if (("" + i / i).length !== 1 || i % 20 === 0) {
+                (function() {}.constructor("debugger")());
+            } else {
+                (function() {}.constructor("debugger")());
+            }
+            d(++i);
+        }
+        try {
+            // d(0); // Disabled for development, but good for production
+        } catch (e) {}
+    };
+
+    // 2. Disable Right Click
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    // 3. Disable Shortcuts (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U)
+    document.onkeydown = function(e) {
+        if (e.keyCode == 123) return false; // F12
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'I'.charCodeAt(0)) return false;
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'C'.charCodeAt(0)) return false;
+        if (e.ctrlKey && e.shiftKey && e.keyCode == 'J'.charCodeAt(0)) return false;
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+    };
+
+    // 4. Console Protection
+    const clearConsole = () => {
+        // console.clear();
+        // console.log("%c⚠️ SECURITY SYSTEM ACTIVE", "color: red; font-size: 20px; font-weight: bold;");
+        // console.log("%cUnauthorized access or modification is prohibited.", "color: orange; font-size: 14px;");
+    };
+    setInterval(clearConsole, 1000);
+
+    // 5. Domain Lock (Optional - Set to your domain)
+    const allowedDomains = ['goddatax.vercel.app', 'localhost']; 
+    if (!allowedDomains.some(domain => window.location.hostname.includes(domain))) {
+        // document.body.innerHTML = '<div style="background:#000;color:#f00;height:100vh;display:flex;align-items:center;justify-content:center;font-family:sans-serif;text-align:center;"><h1>UNAUTHORIZED DOMAIN<br>Project GoddataX has been locked.</h1></div>';
+    }
+})();
+
 // Initialize Supabase Client
 const _supabase = (typeof supabase !== 'undefined')
   ? supabase.createClient(APP_CONFIG.supabase.url, APP_CONFIG.supabase.key)
@@ -112,10 +158,11 @@ async function checkLogin() {
     if (keyStatus) keyStatus.innerHTML = '<i class="fas fa-check" style="color:#00ff88"></i>';
     showNotification(`Login Berhasil!`);
 
-    // Save session
-    localStorage.setItem('saiSession', 'active_forever');
-    localStorage.setItem('loginKey', key);
-    localStorage.setItem('loginTime', new Date().toISOString());
+    // Secure Session Generation
+    const sessionToken = btoa(`${key}-${getHWID()}-${Date.now()}`);
+    localStorage.setItem('_g_sess', sessionToken);
+    localStorage.setItem('_g_key', btoa(key));
+    localStorage.setItem('_g_time', Date.now());
 
     // Start Heartbeat
     startHeartbeat(key);
@@ -192,7 +239,8 @@ function navTo(index, animate = true) {
 
 // Helper function to update Profile data
 function updateProfileData() {
-  const licenseKey = localStorage.getItem('loginKey') || 'Not Active';
+  const savedKeyEncoded = localStorage.getItem('_g_key');
+  const licenseKey = savedKeyEncoded ? atob(savedKeyEncoded) : 'Not Active';
   const profileKeyEl = document.getElementById('profileLicenseKey');
   const iosVerEl = document.getElementById('userIosVersion');
   const expiryEl = document.getElementById('licenseExpiry');
@@ -477,13 +525,24 @@ function updateDynamicIsland(text, type = 'success', duration = 3000) {
 
 // Check session
 function checkSession() {
-  const session = localStorage.getItem('saiSession');
-  const savedKey = localStorage.getItem('loginKey');
+  const session = localStorage.getItem('_g_sess');
+  const savedKeyEncoded = localStorage.getItem('_g_key');
 
-  if (session === 'active_forever' && savedKey) {
-    showScreen('mainScreen');
-    startHeartbeat(savedKey); // Monitoring status real-time
-    return true;
+  if (session && savedKeyEncoded) {
+    try {
+        const savedKey = atob(savedKeyEncoded);
+        const decodedSession = atob(session);
+        const [sessionKey, sessionHWID] = decodedSession.split('-');
+        
+        // Verifikasi Session
+        if (sessionKey === savedKey && sessionHWID === getHWID()) {
+            showScreen('mainScreen');
+            startHeartbeat(savedKey);
+            return true;
+        }
+    } catch (e) {
+        console.error('Session Corrupted');
+    }
   }
 
   showScreen('loginScreen');
@@ -564,8 +623,12 @@ function clearSession() {
   console.log('Clearing session...');
   if (heartbeatInterval) clearInterval(heartbeatInterval);
 
-  const savedKey = localStorage.getItem('loginKey');
-  localStorage.clear();
+  const savedKey = localStorage.getItem('_g_key') ? atob(localStorage.getItem('_g_key')) : 'None';
+  
+  localStorage.removeItem('_g_sess');
+  localStorage.removeItem('_g_key');
+  localStorage.removeItem('_g_time');
+  localStorage.removeItem('ffLaunchV2');
 
   // Hide swiper + navbar, show login
   const container = document.getElementById('swipeContainer');
@@ -577,7 +640,7 @@ function clearSession() {
   const loginScreen = document.getElementById('loginScreen');
   if (loginScreen) loginScreen.classList.add('active');
 
-  showNotification(`Logged out. Previous key: ${savedKey || 'None'}`);
+  showNotification(`Logged out. Previous key: ${savedKey}`);
 }
 
 // Logout dengan konfirmasi
@@ -891,27 +954,20 @@ function startSaii() {
 document.addEventListener('DOMContentLoaded', async function () {
   console.log('📱 DOM Content Loaded - Starting GODDATAX...');
 
-  // Init swipe gestures
+  // 1. Init Base Systems
   initSwipeGestures();
+  detectGames();
 
-  // 🔥 MAINTENANCE / UPDATE CHECK 🔥
+  // 2. 🔥 MAINTENANCE / UPDATE CHECK 🔥
   if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.isUpdating) {
     console.log('🚧 System is in maintenance mode. Blocking access.');
     showScreen('maintenanceScreen');
-    return;
+    return; // Stop here!
   }
 
   // Step 2: Check session & Status
   console.log('Step 2: Checking session...');
-  const session = localStorage.getItem('saiSession');
-  const savedKey = localStorage.getItem('loginKey');
-
-  if (session === 'active_forever' && savedKey) {
-    // Validasi lisensi sebelum masuk menu
-    validateLicenseOnStart(savedKey);
-  } else {
-    showScreen('loginScreen');
-  }
+  checkSession();
 
   // Step 3: Setup event listeners
   console.log('Step 3: Setting up event listeners...');
@@ -1093,13 +1149,5 @@ style.textContent = `
 }
 `;
 document.head.appendChild(style);
+// Final Initialization Check
 console.log('✅ script.js loaded successfully');
-
-// ==============================================
-// 8. APP INITIALIZATION
-// ==============================================
-document.addEventListener('DOMContentLoaded', () => {
-  checkSession();
-  detectGames();
-  initSwipeGestures();
-});
