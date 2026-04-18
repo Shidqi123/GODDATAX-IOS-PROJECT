@@ -5,7 +5,7 @@ const APP_CONFIG = {
   appName: "GODDATAX",
   appVersion: "2.0",
   developer: "Kutoo",
-  isUpdating: false,
+  isUpdating: true,
 
   // iOS Support
   minIOSVersion: "15.0",
