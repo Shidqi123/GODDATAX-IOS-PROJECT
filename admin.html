@@ -257,6 +257,10 @@
                 <h3>Unit Aktif</h3>
                 <div class="value" id="stats-active">0</div>
             </div>
+            <div class="stat-card" id="maintenance-card" style="cursor: pointer;" onclick="toggleMaintenance()">
+                <h3>Maintenance Mode</h3>
+                <div class="value" id="maintenance-status" style="font-size: 20px;">FETCHING...</div>
+            </div>
         </div>
 
         <div class="actions">
@@ -324,6 +328,48 @@
 
             renderLicenses(data);
             updateStats(data);
+            fetchMaintenanceStatus();
+        }
+
+        async function fetchMaintenanceStatus() {
+            const { data, error } = await _supabase
+                .from('app_status')
+                .select('value')
+                .eq('name', 'is_updating')
+                .single();
+
+            const statusEl = document.getElementById('maintenance-status');
+            const cardEl = document.getElementById('maintenance-card');
+
+            if (error) {
+                console.error('Maintenance table not found or error:', error.message);
+                statusEl.textContent = 'OFFLINE (CFG)';
+                statusEl.style.color = '#8a8a8e';
+                return;
+            }
+
+            const isUpdating = data.value === 'true';
+            statusEl.textContent = isUpdating ? 'ACTIVE' : 'INACTIVE';
+            statusEl.style.color = isUpdating ? '#ff0000' : '#00ff88';
+            cardEl.style.borderColor = isUpdating ? '#ff0000' : 'rgba(255, 0, 0, 0.2)';
+        }
+
+        async function toggleMaintenance() {
+            const statusEl = document.getElementById('maintenance-status');
+            const currentStatus = statusEl.textContent === 'ACTIVE';
+            const newStatus = !currentStatus;
+
+            if (!confirm(`Apakah Anda yakin ingin ${newStatus ? 'MENGAKTIFKAN' : 'MEMATIKAN'} Mode Maintenance?`)) return;
+
+            const { error } = await _supabase
+                .from('app_status')
+                .upsert({ name: 'is_updating', value: String(newStatus) }, { onConflict: 'name' });
+
+            if (error) {
+                alert('Gagal update maintenance: ' + error.message + '\nPastikan tabel "app_status" sudah dibuat di Supabase.');
+            } else {
+                fetchMaintenanceStatus();
+            }
         }
 
         function renderLicenses(licenses) {
