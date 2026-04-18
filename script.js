@@ -959,7 +959,27 @@ document.addEventListener('DOMContentLoaded', async function () {
   detectGames();
 
   // 2. 🔥 MAINTENANCE / UPDATE CHECK 🔥
-  if (typeof APP_CONFIG !== 'undefined' && APP_CONFIG.isUpdating) {
+  let isUpdating = APP_CONFIG.isUpdating;
+
+  // Coba ambil status maintenance dari database agar bisa dikontrol lewat Admin
+  if (_supabase) {
+    try {
+      const { data, error } = await _supabase
+        .from('app_status')
+        .select('value')
+        .eq('name', 'is_updating')
+        .single();
+      
+      if (!error && data) {
+        isUpdating = (data.value === 'true');
+        console.log('📡 Remote maintenance status:', isUpdating);
+      }
+    } catch (e) {
+      console.warn('Gagal mengambil status maintenance remote, menggunakan config lokal.');
+    }
+  }
+
+  if (isUpdating) {
     console.log('🚧 System is in maintenance mode. Blocking access.');
     showScreen('maintenanceScreen');
     return; // Stop here!
