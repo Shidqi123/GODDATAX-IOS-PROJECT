@@ -159,7 +159,7 @@ async function checkLogin() {
     showNotification(`Login Berhasil!`);
 
     // Secure Session Generation
-    const sessionToken = btoa(`${key}-${getHWID()}-${Date.now()}`);
+    const sessionToken = btoa(`${key}|${getHWID()}|${Date.now()}`);
     localStorage.setItem('_g_sess', sessionToken);
     localStorage.setItem('_g_key', btoa(key));
     localStorage.setItem('_g_time', Date.now());
@@ -532,7 +532,7 @@ function checkSession() {
     try {
         const savedKey = atob(savedKeyEncoded);
         const decodedSession = atob(session);
-        const [sessionKey, sessionHWID] = decodedSession.split('-');
+        const [sessionKey, sessionHWID] = decodedSession.split('|');
         
         // Verifikasi Session
         if (sessionKey === savedKey && sessionHWID === getHWID()) {
@@ -895,7 +895,7 @@ async function launchFreeFire() {
   setTimeout(() => {
     if (!blurDetected) {
       console.log('❌ App launch failed or not installed');
-      const missingApp = selectedAppToLaunch === 'ff' ? 'FreeFiree' : 'FreeFiree Max';
+      const missingApp = selectedAppToLaunch === 'ff' ? 'Free Fire' : 'Free Fire Max';
       showNotification(`Anda Tidak Menginstall ${missingApp}`);
       
       // Update our internal detection
@@ -947,7 +947,7 @@ function openLaunchSheet(appType) {
   }
 
   const btnText = document.getElementById('sheetBtnText');
-  if (btnText) btnText.textContent = appType === 'ff' ? 'LOGIN FREE FIRE' : 'LOGIN FREE FIRE MAX';
+  if (btnText) btnText.textContent = appType === 'ff' ? 'LAUNCH FREE FIRE' : 'LAUNCH FREE FIRE MAX';
 
   overlay.style.display = 'flex';
 
